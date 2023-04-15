@@ -2,11 +2,5 @@
 requires = [
 	"setuptools>=54",
 	"wheel",
-	"pyyaml",
-	"numpy",
-	"scipy",
-	"lmfit",
-	"matplotlib",
-	"pandas"
 ]
 build-backend = "setuptools.build_meta"
