@@ -48,7 +48,6 @@ class PlotHandler:
         self.enzyme_bar_colors = ['#80cdc1', '#c7eae5'] # 2D bar plots
 
         self.pdf = make_pdf(f"{sample_name}_FRET_fits.pdf")
-        plt.style.use('figure')
 
     def addattr(self, x, v):
         self.__dict__[x] = v
