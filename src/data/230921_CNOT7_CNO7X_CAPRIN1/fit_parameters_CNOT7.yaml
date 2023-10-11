@@ -1,0 +1,71 @@
+Sample name: CNOT7
+Data file to fit: CNOT7_data_for_fit.csv
+Output plot file: CNOT7_FRET_kinetics_fits.pdf
+Optimal fit parameter file: CNOT7_optimal_fit_params.csv
+Experimental parameters:
+  Enzyme: # Enzyme concentration
+    Value: [0, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000005, 0.000007, 0.00001]
+  RNA: # polyA RNA substrate concentration
+    Value: [0.0000001]
+  QT: # DNA quencher strand concentration
+    Value: 0.0000005
+  n: # polyA RNA length
+    Value: 18
+  Temperature: 
+    Value: 303.15
+Modeling parameters:
+  Fit: True
+  Use individual replicates: True
+  Minimizer: 
+    Initial: 'leastsq'
+    Subsequent : 'leastsq'
+  Kinetic model: Distributive
+  Fit parameters:
+    k1:
+      Value: 56.774500840836055
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    km1:
+      Value: 7661.938307102018
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    k2:
+      Value: 539441.933649547
+      Units: M^-1s^-1
+      Vary: True
+      Minimum: 0
+    km2:
+      Value: 1242.652558415206
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    kcat:
+      Value: 3473.5326715931697
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    dGo:
+      Value: -2.9272 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+    alpha:
+      Value: -3.6313 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+  Error estimation:
+    Monte Carlo:
+      Run: False
+      Iterations: 250
+    Error surfaces:
+      Run: False
+      Parameter range factor: 50
+      Points: 50
+Plot parameters:
+  Plot best fit: True
+  Plot residuals: True
+  Plot 2D population bars: False
+  Plot 3D population bars: False
