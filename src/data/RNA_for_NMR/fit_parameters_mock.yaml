@@ -1,0 +1,71 @@
+Sample name: Mock
+Data file to fit: mock_data_for_fit.csv
+Output plot file: mock_FRET_kinetics_fits2.pdf
+Optimal fit parameter file: mock_optimal_fit_params2.csv
+Experimental parameters:
+  Enzyme: # Enzyme concentration
+    Value: [1.e-6, 1.e-5, 1.e-4]
+  RNA: # polyA RNA substrate concentration
+    Value: [1.e-5]
+  QT: # DNA quencher strand concentration
+    Value: 5.e-5
+  n: # polyA RNA length
+    Value: 30
+  Temperature: 
+    Value: 303.15
+Modeling parameters:
+  Fit: False
+  Use individual replicates: False
+  Minimizer: 
+    Initial: 'leastsq'
+    Subsequent : 'leastsq'
+  Kinetic model: Distributive
+  Fit parameters:
+    k1:
+      Value: 51784008310797.69
+      Units: s^-1
+      Vary: False
+      Minimum: 0
+    km1:
+      Value: 13.005992176575226
+      Units: s^-1
+      Vary: False
+      Minimum: 0
+    k2:
+      Value: 1125303.2543985157
+      Units: M^-1s^-1
+      Vary: False
+      Minimum: 0
+    km2:
+      Value: 7.73793711793228
+      Units: s^-1
+      Vary: False
+      Minimum: 0
+    kcat:
+      Value: 0.04811478945948411
+      Units: s^-1
+      Vary: False
+      Minimum: 0
+    dGo:
+      Value: -2.9272 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+    alpha:
+      Value: -3.6313 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+  Error estimation:
+    Monte Carlo:
+      Run: False
+      Iterations: 250
+    Error surfaces:
+      Run: False
+      Parameter range factor: 50
+      Points: 50
+Plot parameters:
+  Plot best fit: True
+  Plot residuals: True
+  Plot 2D population bars: True
+  Plot 3D population bars: False
