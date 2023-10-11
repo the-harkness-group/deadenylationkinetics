@@ -9,10 +9,11 @@ import matplotlib.colors as colors
 import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy import interpolate
+from icecream import ic
 
 class PlotHandler:
 
-    def __init__(self, experiments, kinetic_models, hybridization_models, resids, normalized_resids, sample_name, best_fit_flag, residual_flag, bar_2d_flag, bar_3d_flag):
+    def __init__(self, experiments, kinetic_models, hybridization_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, bar_2d_flag, bar_3d_flag):
 
         self.experiments = experiments
         self.kinetic_models = kinetic_models
@@ -20,6 +21,7 @@ class PlotHandler:
         self.residuals = resids
         self.normalized_residuals = normalized_resids
         self.sample_name = sample_name
+        self.plot_name = plot_name
         self.timesample = [0,30,60,120,300,600,900,1200,1500,1800,2100,2400,3600] # Time points at which to make bar plots of the RNA populations
 
         self.best_fit_flag = best_fit_flag
@@ -28,8 +30,8 @@ class PlotHandler:
         self.bar_3d_flag = bar_3d_flag
 
         unique_enzyme = self.experiments[0].enzyme # FRET plots
-        slice = len(unique_enzyme) + 1
-        points = (len(unique_enzyme) + 1)*(len(unique_enzyme) + 1)
+        slice = 1
+        points = len(unique_enzyme) + 1
         colormap = cm.inferno
         map_name = 'enzyme_colors'
         reversed = True
@@ -38,8 +40,8 @@ class PlotHandler:
         self.alphas = [1,0.9,0.8,0.7,0.6,0.5,0.4,0.3]
 
         t_pop_keys = [k for k in kinetic_models[0].concentrations.keys() if k not in ['E', 'E*']] # 2D and 3D bar plots
-        slice = 18
-        points = 324
+        slice = 1
+        points = len(t_pop_keys)
         colormap = cm.coolwarm
         map_name = 't_pop_colors'
         reversed = False
@@ -47,7 +49,7 @@ class PlotHandler:
 
         self.enzyme_bar_colors = ['#80cdc1', '#c7eae5'] # 2D bar plots
 
-        self.pdf = make_pdf(f"{sample_name}_FRET_fits.pdf")
+        self.pdf = make_pdf(plot_name)
 
     def addattr(self, x, v):
         self.__dict__[x] = v
@@ -63,10 +65,10 @@ class PlotHandler:
             normalized_data_fit_fig = plt.subplots(1,1,figsize=(7,5))
 
             max_time = round(np.max([np.max(v) for v in experiment.time]),-2)
-            #xlim = [0-0.03*max_time, max_time+0.03*max_time]
-            xlim = [0-0.01*max_time, 2800]
-            #xticks = np.linspace(0,max_time,5)
-            xticks = np.linspace(0,2800,5)
+            xlim = [0-0.01*max_time, max_time+0.01*max_time]
+            #xlim = [0-0.01*max_time, 2800]
+            xticks = np.linspace(0,max_time,num=16)
+            #xticks = np.linspace(0,2800,5)
 
             for i, enzyme in enumerate(experiment.enzyme):
                 color_idx = i
@@ -87,11 +89,13 @@ class PlotHandler:
 
             data_fit_fig[1].set_xlim(xlim)
             data_fit_fig[1].set_xticks(xticks)
+            data_fit_fig[1].set_xticklabels(xticks, rotation=-45)
             data_fit_fig[1].set_xlabel('Time (s)')
             data_fit_fig[1].set_ylabel('FRET')
             normalized_data_fit_fig[1].set_xlim(xlim)
             normalized_data_fit_fig[1].set_xticks(xticks)
-            normalized_data_fit_fig[1].set_ylim([-0.25, 1.2])
+            normalized_data_fit_fig[1].set_xticklabels(xticks, rotation=-45)
+            normalized_data_fit_fig[1].set_ylim([-0.2, 1.2])
             normalized_data_fit_fig[1].set_xlabel('Time (s)')
             normalized_data_fit_fig[1].set_ylabel('Normalized FRET')
             if len(experiments) > 1:
@@ -129,8 +133,9 @@ class PlotHandler:
             #xlim = [0-0.03*max_time, max_time+0.03*max_time]
             #xticks = np.linspace(0,max_time,5)
 
-            xlim = [0-0.01*max_time, 2800]
-            xticks = np.linspace(0,2800,5)
+            xlim = [0-0.01*max_time, max_time+0.01*max_time]
+            xticks = np.linspace(0,max_time,num=16)
+
 
             for subfig in resid_fig[1]:
                 subfig.axhline(y=0, color='k',lw=1,ls='--') # Data fit residual plots
@@ -142,6 +147,7 @@ class PlotHandler:
                 resid_fig[1][i].set_ylim([-0.28, 0.28])
                 resid_fig[1][i].set_xlim(xlim)
                 resid_fig[1][i].set_xticks(xticks)
+                resid_fig[1][i].set_xticklabels(xticks, rotation=-45)
 
                 if i < len(experiment.enzyme) - 1:
                     resid_fig[1][i].set_xticklabels([])
@@ -186,6 +192,8 @@ class PlotHandler:
 
                     for q, k in enumerate(kinetic_model.total_rna_concentrations.keys()):
                         if k not in ['A1', f"TA{kinetic_model.n}"]:
+                            ic(k)
+                            ic(kinetic_model.n)
                             alen = int(k.split('TA')[1])
                             ax[2].bar(q, kinetic_model.total_rna_concentrations[k][i][tindex]/kinetic_model.rna, color=t_pop_colors[q], label=f'TA$_{{{alen}}}$')
                     ax[2].invert_xaxis()
@@ -194,15 +202,15 @@ class PlotHandler:
                     ax[1].set_xlabel('Initial RNA and AMP')
                     ax[2].set_xlabel('Product RNA')
                     ax[0].set_xticks([0, 0.75])
-                    ax[0].set_xticklabels(['E', 'E*'], rotation=45)
+                    ax[0].set_xticklabels(['E', 'E*'], rotation=-45)
                     ax[1].set_xticks([0, 0.75])
-                    ax[1].set_xticklabels([f"TA$_{{{kinetic_model.n}}}$", 'A$_{{{1}}}$'], rotation=45)
+                    ax[1].set_xticklabels([f"TA$_{{{kinetic_model.n}}}$", 'A$_{{{1}}}$'], rotation=-45)
                     ax[2].set_xticks([x for x in range(0, kinetic_model.n - 1)])
                     rna_lens = [int(k.split('TA')[1]) for k in kinetic_model.total_rna_concentrations.keys() if k not in [f'TA{kinetic_model.n}', 'A1']]
-                    ax[2].set_xticklabels(['TA' + f"$_{{{v}}}$" for v in rna_lens], rotation=45)
+                    ax[2].set_xticklabels(['TA' + f"$_{{{v}}}$" for v in rna_lens], rotation=-45)
                     ax[0].set_xlim([-0.5, 1.25])
                     ax[1].set_xlim([-0.5, 1.25])
-                    ax[2].set_xlim([16.75, -0.75])
+                    ax[2].set_xlim([kinetic_model.n-0.75, -0.75])
                     ax[0].set_ylim([-0.02, 1.02])
                     ax[1].set_ylim([-0.02, 1.02])
                     ax[2].set_ylim([-0.008, 0.4])
@@ -313,6 +321,7 @@ class PlotHandler:
 
     def get_colors(self, points=100, slice=1, colormap=cm.coolwarm, map_name='plot_colors', reversed=False):
 
+        print(points)
         color_values = colormap(np.linspace(0, 1, points))
         color_values = color_values[0::slice]
 

@@ -137,7 +137,7 @@ class DistributiveDeadenylation():
                 initial_concs = self.C0
                 rate_func = self.relaxation_matrix
                 t_return = np.array(self.time[i])
-                solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
+                solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-8,atol=1e-8,args=(rate_func, param_args))
                 self.extract_solved_concentrations(solver_result)
 
 class DuplexHybridization:
@@ -261,14 +261,18 @@ class DuplexHybridization:
     def simulate_hybridization(self, kinetic_model):
     ## Solve for concentrations of free and hybridized RNA after stopping reaction and adding quencher DNA strand
     ## Needs initial guesses for concentrations as in the kinetic part
-
+        import matplotlib.pyplot as plt
         self.setup_concentrations()
         for i, v in enumerate(kinetic_model.enzyme):
+            fig, ax = plt.subplots(1,1)
             for z,t in enumerate(kinetic_model.time[i]):
                 self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
                 self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
                 self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
+                ax.plot(t, self.annealed_fraction[i][z], 'ko')
+            plt.show()
+            plt.close()
 
 def propagator(t, C, func, constants): # Used in scipy.integrate.solve_ivp, general propagation function for use by kinetic model objects
 

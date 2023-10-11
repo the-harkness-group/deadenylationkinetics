@@ -136,7 +136,8 @@ def main():
     bar_2d_flag = config_params['Plot parameters']['Plot 2D population bars']
     bar_3d_flag = config_params['Plot parameters']['Plot 3D population bars']
     sample_name = config_params['Sample name']
-    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, best_fit_flag, residual_flag, bar_2d_flag, bar_3d_flag)
+    plot_name = config_params['Output plot file']
+    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, bar_2d_flag, bar_3d_flag)
     plot_handler.run_plots()
 
 if __name__ == '__main__':
