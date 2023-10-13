@@ -1,5 +1,5 @@
 Sample name: CNOT7X
-Data file to fit: CNOT7X_data_for_fit_sorted.csv
+Data file to fit: CNOT7X_data_for_fit.csv
 Output plot file: CNOT7X_FRET_kinetics_fits.pdf
 Optimal fit parameter file: CNOT7X_optimal_fit_params.csv
 Experimental parameters:
@@ -22,7 +22,7 @@ Modeling parameters:
   Kinetic model: Distributive
   Fit parameters:
     k1:
-      Value: 10000000
+      Value: 10000000000000.0
       Units: s^-1
       Vary: False
       Minimum: 0
@@ -32,17 +32,17 @@ Modeling parameters:
       Vary: False
       Minimum: 0
     k2:
-      Value: 1287486.797824536
+      Value: 10587792.016413549
       Units: M^-1s^-1
       Vary: True
       Minimum: 0
     km2:
-      Value: 48.7260821674092
+      Value: 109.30131763679785
       Units: s^-1
       Vary: True
       Minimum: 0
     kcat:
-      Value: 5.115323938389604
+      Value: 0.153428068994751046
       Units: s^-1
       Vary: True
       Minimum: 0
@@ -67,5 +67,5 @@ Modeling parameters:
 Plot parameters:
   Plot best fit: True
   Plot residuals: True
-  Plot 2D population bars: False
+  Plot 2D population bars: True
   Plot 3D population bars: False

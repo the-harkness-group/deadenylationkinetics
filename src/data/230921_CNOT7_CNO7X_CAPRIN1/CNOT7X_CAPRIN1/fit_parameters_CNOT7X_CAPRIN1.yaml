@@ -1,10 +1,10 @@
-Sample name: CNOT7
-Data file to fit: CNOT7_data_for_fit.csv
-Output plot file: CNOT7_FRET_kinetics_fits.pdf
-Optimal fit parameter file: CNOT7_optimal_fit_params.csv
+Sample name: CNOT7X-CAPRIN1
+Data file to fit: CNOT7X_CAPRIN1_data_for_fit.csv
+Output plot file: CNOT7X_CAPRIN1_FRET_kinetics_fits.pdf
+Optimal fit parameter file: CNOT7X_CAPRIN1_optimal_fit_params.csv
 Experimental parameters:
   Enzyme: # Enzyme concentration
-    Value: [0, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000005, 0.000007, 0.00001]
+    Value: [0, 0.000002, 0.000003, 0.000005, 0.000007, 0.00001]
   RNA: # polyA RNA substrate concentration
     Value: [0.0000001]
   QT: # DNA quencher strand concentration
@@ -22,27 +22,27 @@ Modeling parameters:
   Kinetic model: Distributive
   Fit parameters:
     k1:
-      Value: 56.774500840836055
+      Value: 10000000
       Units: s^-1
-      Vary: True
+      Vary: False
       Minimum: 0
     km1:
-      Value: 7661.938307102018
+      Value: 0.00000001
       Units: s^-1
-      Vary: True
+      Vary: False
       Minimum: 0
     k2:
-      Value: 539441.933649547
+      Value: 10587927.17929597
       Units: M^-1s^-1
       Vary: True
       Minimum: 0
     km2:
-      Value: 1242.652558415206
+      Value: 59.30181117609112
       Units: s^-1
       Vary: True
       Minimum: 0
     kcat:
-      Value: 3473.5326715931697
+      Value: 0.043428357877090595
       Units: s^-1
       Vary: True
       Minimum: 0
@@ -67,5 +67,5 @@ Modeling parameters:
 Plot parameters:
   Plot best fit: True
   Plot residuals: True
-  Plot 2D population bars: False
+  Plot 2D population bars: True
   Plot 3D population bars: False

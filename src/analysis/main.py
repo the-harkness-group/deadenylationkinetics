@@ -11,6 +11,7 @@ from plotting import PlotHandler
 from minimization import objective_wrapper, residuals
 from lmfit import Parameters, minimize, report_fit
 from error_analysis import ErrorAnalysis
+from icecream import ic
 
 ############################### TO DO #################################
 # - Check first point in fitting
@@ -131,6 +132,11 @@ def main():
             print(f'RSS for simulated data: {np.sum(np.square(resids))}')
     
     # Do plotting
+
+    # Plotting annealed fraction to check for good data
+    # ic(best_hybr_models[1].annealed_fraction[1])
+    # ic(best_kin_models[1].time[1])
+
     best_fit_flag = config_params['Plot parameters']['Plot best fit']
     residual_flag = config_params['Plot parameters']['Plot residuals']
     bar_2d_flag = config_params['Plot parameters']['Plot 2D population bars']
