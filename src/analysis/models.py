@@ -267,7 +267,7 @@ class DuplexHybridization:
         self.setup_concentrations()
         for i, v in enumerate(kinetic_model.enzyme):
             for z,t in enumerate(kinetic_model.time[i]):
-                # ic({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
+                ic({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
                 self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration

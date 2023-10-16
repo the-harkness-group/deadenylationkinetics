@@ -67,5 +67,8 @@ Modeling parameters:
 Plot parameters:
   Plot best fit: True
   Plot residuals: True
-  Plot 2D population bars: True
+  Plot RNA population curves: True
+  Plot annealed fraction: True
+  Plot 2D population bars: False
   Plot 3D population bars: False
+
