@@ -4,6 +4,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root
+from icecream import ic
 
 class DistributiveDeadenylation():
 
@@ -78,7 +79,7 @@ class DistributiveDeadenylation():
         R.append([-k1, km1] + [0]*n + [0]*n + [0])  # E*
         R.append([k1, -km1] + [km2] + [km2+kcat]*(n-1) + [-k2*C0[1]]*n + [0])  # E
         R.append([0]*2 + [-km2] + [0]*(n - 1) + [k2*C0[1]] + [0]*(n - 1) + [0])  # ETA1
-        for y in range(2, n + 1):  # ETA2 to ETAn
+        for y in range(2, n + 1):  # ETA2 to ETAi
             R.append([0]*(y + 1) + [-km2-kcat] + [0]*(n - y) + [0]*(y - 1) + [k2*C0[1]] + [0]*(n - y) + [0])
         R.append([0]*2 + [km2] + [kcat] + [0]*(n - 2) + [-k2*C0[1]] + [0]*(n - 1) + [0])  # TA1
         for y in range(2, n):  # TA2 to TAn-1
@@ -96,7 +97,8 @@ class DistributiveDeadenylation():
             self.concentrations[f"ETA{x}"].append(solver_result.y[x+1]) # x+1 to move past E* and E, ETAi are before TAi
             self.concentrations[f"TA{x}"].append(solver_result.y[x+self.n+1]) # x+n+1 because ETAi and TAi are separated by n indices
         self.concentrations['A1'].append(solver_result.y[-1]) # A1 is last
-    
+
+
     def calculate_total_rna_concentrations(self):
 
         self.total_rna_concentrations = {k:[] for k in self.concentrations.keys() if 'E' not in k}
@@ -136,7 +138,7 @@ class DistributiveDeadenylation():
                 time_span = (self.time[i][0],self.time[i][-1])
                 initial_concs = self.C0
                 rate_func = self.relaxation_matrix
-                t_return = np.array(self.time[i])
+                t_return = np.unique(np.array(self.time[i]))
                 solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
                 self.extract_solved_concentrations(solver_result)
 
@@ -186,7 +188,7 @@ class DuplexHybridization:
         self.C0.append(self.QT) # [Q], free DNA quencher
 
     def get_total_rna_concentrations(self, prior_to_hybridization_concentrations):
-
+        # ic(prior_to_hybridization_concentrations)
         self.total_concentrations = [prior_to_hybridization_concentrations[f'TA{x}'] + prior_to_hybridization_concentrations[f'ETA{x}'] for x in range(1,self.n+1)] # TAi,T = [TAi] + [ETAi]
 
     def calculate_kq(self):
@@ -231,7 +233,7 @@ class DuplexHybridization:
 
         self.baseline_params  =[[] for x in self.enzyme]
         for i, v in enumerate(self.enzyme):
-            baseline_solutions = np.linalg.lstsq(self.baseline_matrix[i][1:], self.experimental_fret[i][1:], rcond=None)  # Don't use time zero dummy point for calculating baselines
+            baseline_solutions = np.linalg.lstsq(self.baseline_matrix[i], self.experimental_fret[i], rcond=None)  # Don't use time zero dummy point for calculating baselines
             self.baseline_params[i].append([baseline_solutions[0][0]])
             self.baseline_params[i].append([baseline_solutions[0][1]])
 
@@ -244,9 +246,9 @@ class DuplexHybridization:
 
         self.fret = [[] for x in self.enzyme]
         for i, v in enumerate(self.enzyme):
-            fret_column_vector = np.matmul(self.baseline_matrix[i][1:], self.baseline_params[i]) # Don't use time zero dummy point for calculating simulated FRET
+            fret_column_vector = np.matmul(self.baseline_matrix[i], self.baseline_params[i]) # Don't use time zero dummy point for calculating simulated FRET
             self.fret[i] = np.ravel(np.reshape(fret_column_vector, (1, len(fret_column_vector))))
-            self.fret[i] = np.insert(self.fret[i], 0, 0) # Put time zero dummy point back in to make simulated FRET the same length as the experimental
+            # self.fret[i] = np.insert(self.fret[i], 0, 0) # Put time zero dummy point back in to make simulated FRET the same length as the experimental
 
     def normalize_fret(self): # Normalize FRET profiles to run from 1 to 0
 
@@ -265,10 +267,17 @@ class DuplexHybridization:
         self.setup_concentrations()
         for i, v in enumerate(kinetic_model.enzyme):
             for z,t in enumerate(kinetic_model.time[i]):
+                ic({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
                 self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
                 self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
+            # for j,k in enumerate(kinetic_model.concentrations.keys()):
+            #     ic({k:kinetic_model.concentrations[k][i][z] for z,t in enumerate(kinetic_model.time[i])})
+            #     self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for z,t in enumerate(kinetic_model.time[i])})
+            #     solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
+            #     self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
+            #     self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
 
 def propagator(t, C, func, constants): # Used in scipy.integrate.solve_ivp, general propagation function for use by kinetic model objects
 
@@ -324,5 +333,5 @@ def calculate_residuals_simulate_best_fit_data(fret_expts, opt_params, config_pa
 
         best_kin_models.append(sim_kinetic_model)
         best_hybr_models.append(sim_hybridization_model)
-
+        
     return resid, normalized_resid, best_kin_models, best_hybr_models

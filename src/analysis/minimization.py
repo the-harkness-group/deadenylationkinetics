@@ -22,7 +22,7 @@ def residuals(ydata, predicted):
 
     resid = []
     for i, v in enumerate(ydata):
-        resid.append((ydata[i][1:] - predicted[i][1:])) # From 1: because 0 index are dummy t=0 values in the experimental dataset that we don't actually have FRET values for due to dead time
+        resid.append((ydata[i] - predicted[i])) # From 1: because 0 index are dummy t=0 values in the experimental dataset that we don't actually have FRET values for due to dead time
 
     return resid
 

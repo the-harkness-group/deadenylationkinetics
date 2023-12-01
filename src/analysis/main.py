@@ -11,11 +11,13 @@ from plotting import PlotHandler
 from minimization import objective_wrapper, residuals
 from lmfit import Parameters, minimize, report_fit
 from error_analysis import ErrorAnalysis
+from icecream import ic
 
 ############################### TO DO #################################
 # - Check first point in fitting
 # - Deepcopy pandas df in Experiment and Models
 # - Move FRET normalization to Experiment class, or somewhere smarter
+# - Fix replicate stuff in don't fit, use individual replicates block
 #######################################################################
 
 def main():
@@ -131,12 +133,20 @@ def main():
             print(f'RSS for simulated data: {np.sum(np.square(resids))}')
     
     # Do plotting
+
+    # Plotting annealed fraction to check for good data
+    # ic(best_hybr_models[1].annealed_fraction[1])
+    # ic(best_kin_models[1].time[1])
+
     best_fit_flag = config_params['Plot parameters']['Plot best fit']
     residual_flag = config_params['Plot parameters']['Plot residuals']
+    RNA_populations_flag = config_params['Plot parameters']['Plot RNA population curves']
+    annealed_fraction_flag = config_params['Plot parameters']['Plot annealed fraction']
     bar_2d_flag = config_params['Plot parameters']['Plot 2D population bars']
     bar_3d_flag = config_params['Plot parameters']['Plot 3D population bars']
     sample_name = config_params['Sample name']
-    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, best_fit_flag, residual_flag, bar_2d_flag, bar_3d_flag)
+    plot_name = config_params['Output plot file']
+    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag)
     plot_handler.run_plots()
 
 if __name__ == '__main__':
