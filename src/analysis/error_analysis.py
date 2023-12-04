@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy.interpolate import griddata
 from copy import deepcopy
+from icecream import ic
 
 class ErrorAnalysis():
 
@@ -78,7 +79,7 @@ class ErrorAnalysis():
                     try:
                         result = future.result()
                     except Exception as exc:
-                        print('%r generated an exception: %s' % (ax, exc))
+                        print('%r generated an exception in parameter correlation fits: %s' % (ax, exc))
                     else:
                         print(f'Parameter pair {param_pairs} iteration {ax} completed.')
                         self.correlation_pairs[param_pairs]['Result order'].append(ax)
@@ -106,7 +107,7 @@ class ErrorAnalysis():
                 try:
                     result = future.result()
                 except Exception as exc:
-                    print('%r generated an exception: %s' % (ax, exc))
+                    print('%r generated an exception in Monte Carlo fits: %s' % (ax, exc))
                 else:
                     print(f'Monte Carlo iteration {ax} completed.')
                     {self.monte_carlo_parameters[k].append(result.params[k].value) for k in self.monte_carlo_parameters.keys()}
@@ -139,6 +140,7 @@ class ErrorAnalysis():
         perturbed_experiment = deepcopy(perfect_experiment)
         perturbed_experiment.fret = np.array(perturbed_experiment.fret) + np.random.RandomState().normal(scale=rmsd, size=(np.size(perturbed_experiment.fret, 0), np.size(perturbed_experiment.fret, 1)))
         perturbed_minimizer_result = minimize(objective_wrapper, initial_guess_params, method = min_method, args=(perturbed_experiment, kinetic_model, hybridization_model, simulate_full_model, print_current_params))
+        ic(perturbed_minimizer_result)
         return perturbed_minimizer_result
 
     def parameter_correlation_surfaces(self, sample_name):

@@ -89,14 +89,19 @@ class DistributiveDeadenylation():
 
         return R
 
-    def extract_solved_concentrations(self, solver_result):
+    def extract_solved_concentrations(self, solver_result, time):
 
-        self.concentrations['E*'].append(solver_result.y[0])
-        self.concentrations['E'].append(solver_result.y[1])
+        tmp = [[] for x in solver_result.y]
+        for i, v in enumerate(time):
+            idx = np.where(solver_result.t == v)[0][0] # Find index of time point in model that matches time point in experiment
+            for j,k in enumerate(solver_result.y):
+                tmp[j].append(k[idx])
+        self.concentrations['E*'].append(tmp[0])
+        self.concentrations['E'].append(tmp[1])
         for x in range(1,self.n+1): # Don't have to use two for loops because concentrations is dict not list
-            self.concentrations[f"ETA{x}"].append(solver_result.y[x+1]) # x+1 to move past E* and E, ETAi are before TAi
-            self.concentrations[f"TA{x}"].append(solver_result.y[x+self.n+1]) # x+n+1 because ETAi and TAi are separated by n indices
-        self.concentrations['A1'].append(solver_result.y[-1]) # A1 is last
+            self.concentrations[f"ETA{x}"].append(tmp[x+1]) # x+1 to move past E* and E, ETAi are before TAi
+            self.concentrations[f"TA{x}"].append(tmp[x+self.n+1]) # x+n+1 because ETAi and TAi are separated by n indices
+        self.concentrations['A1'].append(tmp[-1]) # A1 is last
 
 
     def calculate_total_rna_concentrations(self):
@@ -104,8 +109,10 @@ class DistributiveDeadenylation():
         self.total_rna_concentrations = {k:[] for k in self.concentrations.keys() if 'E' not in k}
         for i, v in enumerate(self.enzyme):
             for j in range(1, self.n+1):
-                self.total_rna_concentrations[f'TA{j}'].append(self.concentrations[f'TA{j}'][i] + self.concentrations[f'ETA{j}'][i]) # TAi,T = [TAi] + [ETAi]
+                # self.total_rna_concentrations[f'TA{j}'].append(self.concentrations[f'TA{j}'][i] + self.concentrations[f'ETA{j}'][i]) # TAi,T = [TAi] + [ETAi]
+                self.total_rna_concentrations[f'TA{j}'].append([sum(x) for x in zip(self.concentrations[f'TA{j}'][i], self.concentrations[f'ETA{j}'][i])]) # TAi,T = [TAi] + [ETAi]
             self.total_rna_concentrations['A1'].append(self.concentrations['A1'][i]) # TAi,T = [TAi] + [ETAi]
+
 
     def simulate_kinetics(self, params):
         ## Run numerical integration of rate equations for a given kinetic model from t=0, returns Ci(t)
@@ -135,19 +142,19 @@ class DistributiveDeadenylation():
             else:
                 self.initial_concentration_guesses(self.enzyme[i], self.rna, k1, km1, self.n)
                 param_args = {'k1':k1, 'km1':km1, 'k2':k2, 'km2':km2, 'kcat':kcat, 'n':self.n}
-                time_span = (self.time[i][0],self.time[i][-1])
+                time_span = (np.min(self.time[i]),np.max(self.time[i]))
                 initial_concs = self.C0
                 rate_func = self.relaxation_matrix
-                t_return = np.unique(np.array(self.time[i]))
+                t_return = np.unique(np.array(self.time[i]))  # only solve for unique time points
                 solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
-                self.extract_solved_concentrations(solver_result)
+                self.extract_solved_concentrations(solver_result,self.time[i])
 
 class DuplexHybridization:
 
     def __init__(self, fret_experiment):
 
         self.experimental_fret = fret_experiment.fret # Needed for solving baseline params with Ax = B
-        self.fret_error = fret_experiment.fret_error
+        # self.fret_error = fret_experiment.fret_error
         self.dGo = fret_experiment.dGo
         self.alpha = fret_experiment.alpha
         self.n = fret_experiment.n
@@ -188,7 +195,7 @@ class DuplexHybridization:
         self.C0.append(self.QT) # [Q], free DNA quencher
 
     def get_total_rna_concentrations(self, prior_to_hybridization_concentrations):
-        # ic(prior_to_hybridization_concentrations)
+
         self.total_concentrations = [prior_to_hybridization_concentrations[f'TA{x}'] + prior_to_hybridization_concentrations[f'ETA{x}'] for x in range(1,self.n+1)] # TAi,T = [TAi] + [ETAi]
 
     def calculate_kq(self):
@@ -254,11 +261,11 @@ class DuplexHybridization:
 
         self.normalized_experimental_fret = []
         self.normalized_fret = []
-        self.normalized_fret_error = []
+        # self.normalized_fret_error = []
         for i, v in enumerate(self.enzyme):
             self.normalized_fret.append((self.fret[i] - self.baseline_params[i][1])/self.baseline_params[i][0])
             self.normalized_experimental_fret.append((self.experimental_fret[i] - self.baseline_params[i][1])/self.baseline_params[i][0])
-            self.normalized_fret_error.append(np.sqrt((self.fret_error[i]/self.baseline_params[i][0])**2))
+            # self.normalized_fret_error.append(np.sqrt((self.fret_error[i]/self.baseline_params[i][0])**2))
 
     def simulate_hybridization(self, kinetic_model):
     ## Solve for concentrations of free and hybridized RNA after stopping reaction and adding quencher DNA strand
@@ -267,17 +274,10 @@ class DuplexHybridization:
         self.setup_concentrations()
         for i, v in enumerate(kinetic_model.enzyme):
             for z,t in enumerate(kinetic_model.time[i]):
-                ic({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
                 self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for k in kinetic_model.concentrations.keys()})
-                solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
+                solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='hybr')
                 self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
                 self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
-            # for j,k in enumerate(kinetic_model.concentrations.keys()):
-            #     ic({k:kinetic_model.concentrations[k][i][z] for z,t in enumerate(kinetic_model.time[i])})
-            #     self.get_total_rna_concentrations({k:kinetic_model.concentrations[k][i][z] for z,t in enumerate(kinetic_model.time[i])})
-            #     solver_result = root(self.hybrid_duplex_equations, self.C0, args=(self.n, self.QT, self.total_concentrations, self.KQ), method='lm')
-            #     self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
-            #     self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
 
 def propagator(t, C, func, constants): # Used in scipy.integrate.solve_ivp, general propagation function for use by kinetic model objects
 

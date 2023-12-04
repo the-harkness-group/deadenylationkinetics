@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+from icecream import ic
 
 def objective_wrapper(params, experiment, kinetic_model, hybridization_model, simulate_full_model, print_current_params=True):
 
     kinetic_model, hybridization_model = simulate_full_model(params, kinetic_model, hybridization_model)
+    
     resid = residuals(experiment.fret, hybridization_model.fret)
-    resid = np.ravel(resid)
+    resid = np.concatenate(resid, axis=None)
     rss = sum_of_squared_residuals(resid)
     
     if print_current_params == True:
@@ -22,7 +24,7 @@ def residuals(ydata, predicted):
 
     resid = []
     for i, v in enumerate(ydata):
-        resid.append((ydata[i] - predicted[i])) # From 1: because 0 index are dummy t=0 values in the experimental dataset that we don't actually have FRET values for due to dead time
+        resid.append((ydata[i] - predicted[i])) 
 
     return resid
 

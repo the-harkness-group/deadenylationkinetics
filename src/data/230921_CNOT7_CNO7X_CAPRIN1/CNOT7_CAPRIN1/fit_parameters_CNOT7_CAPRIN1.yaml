@@ -1,7 +1,7 @@
 Sample name: CNOT7-CAPRIN1
-Data file to fit: CNOT7_CAPRIN1_data_for_fit.csv
-Output plot file: CNOT7_CAPRIN1_FRET_kinetics_fits.pdf
-Optimal fit parameter file: CNOT7_CAPRIN1_optimal_fit_params.csv
+Data file to fit: CNOT7_CAPRIN1_data_for_fit_sorted.csv
+Output plot file: CNOT7_CAPRIN1_FRET_kinetics_fits_sorted.pdf
+Optimal fit parameter file: CNOT7_CAPRIN1_optimal_fit_params_sorted.csv
 Experimental parameters:
   Enzyme: # Enzyme concentration
     Value: [0, 0.000002, 0.000003, 0.000005, 0.000007, 0.00001]
@@ -17,32 +17,32 @@ Modeling parameters:
   Fit: True
   Use individual replicates: True
   Minimizer: 
-    Initial: 'leastsq'
+    Initial: 'nelder'
     Subsequent : 'leastsq'
   Kinetic model: Distributive
   Fit parameters:
     k1:
-      Value: 10000.0
+      Value: 1.113e+03
       Units: s^-1
       Vary: True
       Minimum: 0
     km1:
-      Value: 0.01
+      Value: 0.103
       Units: s^-1
       Vary: True
       Minimum: 0
     k2:
-      Value: 10587792.016413549
+      Value: 1.132e+07
       Units: M^-1s^-1
       Vary: True
       Minimum: 0
     km2:
-      Value: 59.30131763679785
+      Value: 781.3
       Units: s^-1
       Vary: True
       Minimum: 0
     kcat:
-      Value: 0.143428068994751046
+      Value: 0.18617
       Units: s^-1
       Vary: True
       Minimum: 0
