@@ -17,7 +17,7 @@ Modeling parameters:
   Fit: True
   Use individual replicates: True
   Minimizer: 
-    Initial: 'leastsq'
+    Initial: 'nelder'
     Subsequent : 'leastsq'
   Kinetic model: Distributive
   Fit parameters:
@@ -32,17 +32,17 @@ Modeling parameters:
       Vary: False
       Minimum: 0
     k2:
-      Value: 10587792.016413549
+      Value: 2.224e+05
       Units: M^-1s^-1
       Vary: True
       Minimum: 0
     km2:
-      Value: 109.30131763679785
+      Value: 13.66
       Units: s^-1
       Vary: True
       Minimum: 0
     kcat:
-      Value: 0.153428068994751046
+      Value: 0.2578
       Units: s^-1
       Vary: True
       Minimum: 0

@@ -1,7 +1,7 @@
 Sample name: CNOT7
-Data file to fit: CNOT7_data_for_fit.csv
-Output plot file: CNOT7_FRET_kinetics_fits.pdf
-Optimal fit parameter file: CNOT7_optimal_fit_params.csv
+Data file to fit: CNOT7_data_for_fit_sorted_clean.csv
+Output plot file: CNOT7_FRET_kinetics_fits_sorted_clean.pdf
+Optimal fit parameter file: CNOT7_optimal_fit_params_sorted_clean.csv
 Experimental parameters:
   Enzyme: # Enzyme concentration
     Value: [0, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000005, 0.000007, 0.00001]
@@ -17,34 +17,34 @@ Modeling parameters:
   Fit: True
   Use individual replicates: True
   Minimizer: 
-    Initial: 'leastsq'
+    Initial: 'nelder'
     Subsequent : 'leastsq'
   Kinetic model: Distributive
   Fit parameters:
     k1:
-      Value: 50.1057431
+      Value: 27.739368966300745
       Units: s^-1
-      Vary: False
+      Vary: True
       Minimum: 0
     km1:
-      Value: 557.749040
+      Value: 517.6187339416231
       Units: s^-1
-      Vary: False
+      Vary: True
       Minimum: 0
     k2:
-      Value: 13049895.6
+      Value: 6673520.470365472
       Units: M^-1s^-1
-      Vary: False
+      Vary: True
       Minimum: 0
     km2:
-      Value: 29.2902145
+      Value: 32.52056679333865
       Units: s^-1
-      Vary: False
+      Vary: True
       Minimum: 0
     kcat:
-      Value: 0.08497154
+      Value: 0.28367846668362007
       Units: s^-1
-      Vary: False
+      Vary: True
       Minimum: 0
     dGo:
       Value: -2.9272 # kJ/mol Empirical value calculated from Sugimoto NAR paper

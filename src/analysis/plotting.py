@@ -11,6 +11,7 @@ from scipy.interpolate import CubicSpline
 from scipy import interpolate
 from icecream import ic
 
+
 class PlotHandler:
 
     def __init__(self, experiments, kinetic_models, hybridization_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag):
@@ -32,7 +33,7 @@ class PlotHandler:
 
         unique_enzyme = self.experiments[0].enzyme # FRET plots
         slice = 1
-        points = len(unique_enzyme) + 1
+        points = len(unique_enzyme)
         colormap = cm.inferno
         map_name = 'enzyme_colors'
         reversed = True
@@ -55,74 +56,6 @@ class PlotHandler:
     def addattr(self, x, v):
         self.__dict__[x] = v
 
-    @staticmethod
-    def plot_all_populations(experiments, kinetic_models, sample_name, pdf):
-            
-        # !! still needs colorbar legend
-    
-        for j, experiment in enumerate(experiments): # Only make plot for one replicate
-            if j == 0:
-                kinetic_model = kinetic_models[j]
-                kinetic_model.calculate_total_rna_concentrations()
-                color_values = cm.coolwarm(np.linspace(0,1,len(kinetic_model.total_rna_concentrations.keys())))
-
-                all_populations_fig, axs = plt.subplots(len(experiment.enzyme),2,figsize=(9,len(experiment.enzyme)*2), gridspec_kw={'width_ratios': [3,1]}) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
-                
-                for i, enzyme in enumerate(experiment.enzyme):
-                    # if i == len(experiment.enzyme)+1:
-                    #     vmax = len(kinetic_model.total_rna_concentrations.keys()) - 1
-                    #     sm = plt.cm.ScalarMappable(cmap='coolwarm',norm=plt.Normalize(vmin=1,vmax=vmax))
-                    #     sm.set_array([])
-                    #     plt.colorbar(sm, orientation = 'horizontal', ticks=(1, vmax), label='polyA length (TAi)')
-                    # else:
-                    # all populations plot
-                    for q, k in enumerate(kinetic_model.total_rna_concentrations.keys()):
-                        if k != 'A1': 
-                            axs[i][0].plot(kinetic_model.time[i], (kinetic_model.total_rna_concentrations[k][i])*10**6, label=k, color=color_values[q], alpha=0.8)                
-                        else: # Plot A1 on separate axis since it gets very large
-                            axs[i][1].plot(kinetic_model.time[i], (kinetic_model.total_rna_concentrations[k][i])*10**6, label=k, color=color_values[0], alpha=0.8)
-                    
-                    if i == len(experiment.enzyme) - 1:
-                        axs[i][0].set_xlabel('Time (s)')
-                        axs[i][1].set_xlabel('Time (s)')
-                    else:
-                        axs[i][0].set_xticklabels([])
-                        axs[i][1].set_xticklabels([])
-                        
-                    axs[i][0].set_ylabel('Concentration (nM)')
-                    axs[i][0].set_title(f"RNA species for {enzyme*1e6} $\mu$M {sample_name}")
-                    axs[i][1].set_title(f"[A1] (nM)")
-                all_populations_fig.tight_layout()
-                pdf.savefig(all_populations_fig)
-            plt.close()
-
-    @staticmethod
-    def plot_annealed_fraction(experiments, hybridization_models, enz_colors, sample_name, pdf):
-
-        for j, experiment in enumerate(experiments): # Plot individual replicates on separate plots to see fits more clearly
-            if j == 0:
-                hybridization_model = hybridization_models[j]
-                annealed_fraction_fig = plt.subplots(1,1,figsize=(7,5)) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
-
-                for i, enzyme in enumerate(experiment.enzyme):
-                    color_idx = i
-                    line_label = f"{enzyme*1e6}"
-
-                    # Annealed Fraction plot
-                    annealed_fraction_fig[1].scatter(hybridization_model.time[i],hybridization_model.annealed_fraction[i],color=enz_colors[color_idx],label=line_label)
-                
-                annealed_fraction_fig[1].set_xlabel('Time (s)')
-                annealed_fraction_fig[1].set_ylabel('Annealed fraction')
-                annealed_fraction_fig[1].set_title(f"Annealed fraction")
-                annealed_fraction_fig[1].set_ylim([-0.1, 1.1])
-                L = annealed_fraction_fig[1].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
-                for k,text in enumerate(L.get_texts()):
-                    text.set_color('w')
-                    text.set_path_effects([path_effects.Stroke(linewidth=1.5, foreground=enz_colors[k]),path_effects.Normal()])
-                annealed_fraction_fig[0].tight_layout()
-                pdf.savefig(annealed_fraction_fig[0])
-            plt.close()
-
 
     @staticmethod
     def plot_best_fit(experiments, kinetic_models, hybridization_models, enz_colors, sample_name, pdf):
@@ -144,12 +77,15 @@ class PlotHandler:
                 line_label = f"{enzyme*1e6}"
 
                 # FRET data plots
-                data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.fret[i],color=enz_colors[color_idx],label=line_label)
-                data_fit_fig[1].errorbar(experiment.time[i],experiment.fret[i],yerr=experiment.fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,
-                                         ecolor=enz_colors[color_idx])
-                normalized_data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.normalized_fret[i],color=enz_colors[color_idx],label=line_label)
-                normalized_data_fit_fig[1].errorbar(experiment.time[i],hybridization_model.normalized_experimental_fret[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,
-                                                    mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
+                data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.fret[i],color=enz_colors[color_idx])
+                # data_fit_fig[1].errorbar(experiment.time[i],experiment.fret[i],yerr=experiment.fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,
+                #                          ecolor=enz_colors[color_idx])
+                data_fit_fig[1].scatter(experiment.time[i],experiment.fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)
+                normalized_data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.normalized_fret[i],color=enz_colors[color_idx])
+                # normalized_data_fit_fig[1].errorbar(experiment.time[i],hybridization_model.normalized_experimental_fret[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,
+                #                                     mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
+                normalized_data_fit_fig[1].scatter(experiment.time[i],hybridization_model.normalized_experimental_fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)                
+
 
             data_fit_fig[1].set_xlim(xlim)
             data_fit_fig[1].set_xticks(xticks)
@@ -169,18 +105,19 @@ class PlotHandler:
                 normalized_data_fit_fig[1].set_title(f"Average of replicates - normalized")
             L = normalized_data_fit_fig[1].legend(frameon=False,handlelength=0,handleheight=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
             for k,text in enumerate(L.get_texts()):
-                text.set_color('w')
-                text.set_path_effects([path_effects.Stroke(linewidth=1.5, foreground=enz_colors[k]),path_effects.Normal()])
+                text.set_color(enz_colors[k])
+                text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[k]),path_effects.Normal()])
             L = data_fit_fig[1].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
             for k,text in enumerate(L.get_texts()):
-                text.set_color('w')
-                text.set_path_effects([path_effects.Stroke(linewidth=1.5, foreground=enz_colors[k]),path_effects.Normal()])
+                text.set_color(enz_colors[k])
+                text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[k]),path_effects.Normal()])
 
             data_fit_fig[0].tight_layout()
             normalized_data_fit_fig[0].tight_layout()
             pdf.savefig(data_fit_fig[0])
             pdf.savefig(normalized_data_fit_fig[0])
         plt.close()
+
 
     @staticmethod
     def plot_residuals(experiments, kinetic_models, hybridization_models, normalized_residuals, enz_colors, pdf):
@@ -197,15 +134,22 @@ class PlotHandler:
             xticks = np.linspace(0,max_time,5)
 
             for subfig in resid_fig[1]:
-                subfig.axhline(y=0, color='k',lw=1,ls='--') # Data fit residual plots
+                subfig.axhline(y=0, color='k',lw=1,ls='--',zorder=0) # Data fit residual plots
 
             for i, enzyme in enumerate(experiment.enzyme):
                 color_idx = i
-                resid_fig[1][i].errorbar(experiment.time[i],normalized_residual[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,
-                                         capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
+                line_label = f"{enzyme*1e6} $\mu$M"
+                # resid_fig[1][i].errorbar(experiment.time[i],normalized_residual[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,
+                #                          capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
+                resid_fig[1][i].scatter(experiment.time[i],normalized_residual[i],color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)
                 resid_fig[1][i].set_ylim([-0.28, 0.28])
                 resid_fig[1][i].set_xlim(xlim)
                 resid_fig[1][i].set_xticks(xticks)
+                
+                L = resid_fig[1][i].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',markerscale=0)
+                for k,text in enumerate(L.get_texts()):
+                    text.set_color(enz_colors[i])
+                    text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[i]),path_effects.Normal()])
 
                 if i < len(experiment.enzyme) - 1:
                     resid_fig[1][i].set_xticklabels([])
@@ -224,20 +168,86 @@ class PlotHandler:
             pdf.savefig(resid_fig[0])
         plt.close()
 
+
+    @staticmethod
+    def plot_all_populations(experiments, kinetic_models, sample_name, pdf):
+            
+        # !! still needs colorbar legend
+    
+        for j, experiment in enumerate(experiments): # Only make plot for one replicate
+            if j == 0:
+                kinetic_model = kinetic_models[j]
+                kinetic_model.calculate_total_rna_concentrations()
+                color_values = cm.coolwarm(np.linspace(0,1,len(kinetic_model.total_rna_concentrations.keys())))
+
+                all_populations_fig, axs = plt.subplots(len(experiment.enzyme),2,figsize=(9,len(experiment.enzyme)*2), gridspec_kw={'width_ratios': [3,1]}) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
+                
+                for i, enzyme in enumerate(experiment.enzyme):
+
+                    # all populations plot
+                    for q, k in enumerate(kinetic_model.total_rna_concentrations.keys()):
+                        if k != 'A1': 
+                            axs[i][0].plot(kinetic_model.time[i], kinetic_model.total_rna_concentrations[k][i], label=k, color=color_values[q], alpha=0.8)                
+                        else: # Plot A1 on separate axis since it gets very large
+                            axs[i][1].plot(kinetic_model.time[i], kinetic_model.total_rna_concentrations[k][i], label=k, color=color_values[0], alpha=0.8)
+                    
+                    if i == len(experiment.enzyme) - 1:  # Put x-axis label below last plot
+                        axs[i][0].set_xlabel('Time (s)')
+                        axs[i][1].set_xlabel('Time (s)')
+                    else: # No x-tick labels for plots that aren't on bottom row
+                        axs[i][0].set_xticklabels([])
+                        axs[i][1].set_xticklabels([])
+                        
+                    axs[i][0].set_ylabel('Concentration (M)')
+                    axs[i][0].set_title(f"RNA species for {enzyme*1e6} $\mu$M {sample_name}")
+                    axs[i][1].set_title(f"[A1] (M)")
+                all_populations_fig.tight_layout()
+                pdf.savefig(all_populations_fig)
+            plt.close()
+
+
+    @staticmethod
+    def plot_annealed_fraction(experiments, hybridization_models, enz_colors, sample_name, pdf):
+
+        for j, experiment in enumerate(experiments): # Plot individual replicates on separate plots to see fits more clearly
+            if j == 0:
+                hybridization_model = hybridization_models[j]
+                annealed_fraction_fig = plt.subplots(1,1,figsize=(7,5)) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
+
+                for i, enzyme in enumerate(experiment.enzyme):
+                    color_idx = i
+                    line_label = f"{enzyme*1e6}"
+
+                    # Annealed Fraction plot
+                    annealed_fraction_fig[1].scatter(hybridization_model.time[i],hybridization_model.annealed_fraction[i],s=30,color=enz_colors[color_idx],label=line_label,alpha=0.8,linewidth=0)
+                
+                annealed_fraction_fig[1].set_xlabel('Time (s)')
+                annealed_fraction_fig[1].set_ylabel('Annealed fraction')
+                annealed_fraction_fig[1].set_title(f"Annealed fraction")
+                annealed_fraction_fig[1].set_ylim([-0.1, 1.1])
+                L = annealed_fraction_fig[1].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
+                for k,text in enumerate(L.get_texts()):
+                    text.set_color(enz_colors[k])
+                    text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[k]),path_effects.Normal()])
+                annealed_fraction_fig[0].tight_layout()
+                pdf.savefig(annealed_fraction_fig[0])
+            plt.close()
+
+
     @staticmethod
     def plot_2d_population_bars(experiments, kinetic_models, hybridization_models, enzyme_colors, t_pop_colors, pdf, timesample):
 
         for j, experiment in enumerate(experiments): # Plot individual replicates on separate plots to see fits more clearly
             if j == 0:
                 kinetic_model = kinetic_models[j]
-                hybridization_model = hybridization_models[j]
+                # hybridization_model = hybridization_models[j]
 
-                pop_fig = []
-                for enzyme in experiment.enzyme:
-                    pop_fig.append(plt.subplots(1,1,figsize=(7,5))) # RNA:DNA duplex population plots
+                # pop_fig = []
+                # for enzyme in experiment.enzyme:
+                #     pop_fig.append(plt.subplots(1,1,figsize=(7,5))) # RNA:DNA duplex population plots
 
-                taxlist = [] # RNA population plots at time slices
-                tfiglist = []
+                # taxlist = [] # RNA population plots at time slices
+                # tfiglist = []
                 for i, enzyme in enumerate(experiment.enzyme):
                     # Species concentration bar plots at desired time points
                     fig, ax = plt.subplots(len(timesample), 3, figsize=(11, len(timesample)*2), gridspec_kw={'width_ratios': [1, 1, 6]})
@@ -286,6 +296,7 @@ class PlotHandler:
                     fig.tight_layout()
                     pdf.savefig(fig)
         plt.close()
+
 
     @staticmethod
     def plot_3d_population_bars(experiments, kinetic_models, hybridization_models, pdf, timesample, sample_name):
@@ -371,26 +382,34 @@ class PlotHandler:
                 pdf.savefig(fig)
         plt.close()
 
+
     def run_plots(self):
 
         if self.best_fit_flag == True:
             self.plot_best_fit(self.experiments, self.kinetic_models, self.hybridization_models, self.enzyme_colors, self.sample_name, self.pdf)
+
         if self.residual_flag == True:
             self.plot_residuals(self.experiments, self.kinetic_models, self.hybridization_models, self.normalized_residuals, self.enzyme_colors, self.pdf)
+                
         if self.RNA_populations_flag == True:
             self.plot_all_populations(self.experiments, self.kinetic_models, self.sample_name, self.pdf)
+                
         if self.annealed_fraction_flag == True:
             self.plot_annealed_fraction(self.experiments, self.hybridization_models, self.enzyme_colors, self.sample_name, self.pdf)
+                
         if self.bar_2d_flag == True:
             self.plot_2d_population_bars(self.experiments, self.kinetic_models, self.hybridization_models, self.enzyme_bar_colors, self.t_pop_colors, self.pdf, self.timesample)
+                
         if self.bar_3d_flag == True:
-            self.plot_3d_population_bars(self.experiments, self.kinetic_models, self.hybridization_models, self.pdf, self.timesample, self.sample_name)
+            self.plot_3d_population_bars(self.experiments, self.kinetic_models, self.hybridization_models, self.pdf, self.timesample, self.sample_name)                
         self.pdf.close()
+
 
     def get_colors(self, points=100, slice=1, colormap=cm.coolwarm, map_name='plot_colors', reversed=False):
 
-        color_values = colormap(np.linspace(0, 1, points))
-        color_values = color_values[0::slice]
+        color_values = colormap(np.linspace(0, 1, points+2))
+        color_values = color_values[1:-1]
+        # color_values = color_values[0::slice]
 
         if reversed == True:
             color_values = color_values[::-1]

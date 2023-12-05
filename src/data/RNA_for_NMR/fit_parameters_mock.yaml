@@ -14,10 +14,10 @@ Experimental parameters:
   Temperature: 
     Value: 303.15
 Modeling parameters:
-  Fit: True
+  Fit: False
   Use individual replicates: True
   Minimizer: 
-    Initial: 'leastsq'
+    Initial: 'nelder'
     Subsequent : 'leastsq'
   Kinetic model: Distributive
   Fit parameters:

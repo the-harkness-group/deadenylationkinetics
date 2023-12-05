@@ -68,8 +68,10 @@ def make_dictionary(key_list, value_list):
 
 def write_optimal_parameter_csv(opt_params, opt_param_units, file):
 
+    # opt_params_dict = {'Parameter':[k for k in opt_params.keys() if 'Error' not in k], 'Value':[opt_params[k] for k in opt_params if 'Error' not in k],
+    #     'Error':[opt_params[k] for k in opt_params.keys() if 'Error' in k], 'Units':[i for i in opt_param_units]}
     opt_params_dict = {'Parameter':[k for k in opt_params.keys() if 'Error' not in k], 'Value':[opt_params[k] for k in opt_params if 'Error' not in k],
-    'Error':[opt_params[k] for k in opt_params.keys() if 'Error' in k], 'Units':[i for i in opt_param_units]}
+                       'Units':[i for i in opt_param_units]}
     
     opt_params_df = pd.DataFrame(opt_params_dict)
     opt_params_df.to_csv(file)
