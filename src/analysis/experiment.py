@@ -15,7 +15,8 @@ class FretExperiment():
         # self.fret_error = []
         self.replicate = data.Replicate.unique()
         self.enzyme = data.Enzyme.unique()
-        self.rna = np.array([float(i) for i in data.RNA.unique()]) # Need to either make float or index from unique() with [0] because otherwise makes a ragged nested array in kinetics C0 later
+        self.rna = float(data.RNA.unique()) # Need to either make float or index from unique() with [0] because otherwise makes a ragged nested array in kinetics C0 later
+        # self.rna = np.array([float(i) for i in data.RNA.unique()]) # Need to either make float or index from unique() with [0] because otherwise makes a ragged nested array in kinetics C0 later
         self.QT = hybridization_params['QT']
         self.n = hybridization_params['n']
         self.dGo = hybridization_params['dGo']
