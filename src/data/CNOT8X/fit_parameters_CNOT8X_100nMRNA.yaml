@@ -1,0 +1,73 @@
+Sample name: CNOT8X
+Data file to fit: CNOT8X_RNA-100nM-data_for_fit_sorted.csv
+Output plot file: CNOT8X_100nMRNA_FRET_kinetics_fits_sorted.pdf
+Optimal fit parameter file: CNOT8X_100nMRNA_optimal_fit_params_sorted.csv
+Experimental parameters:
+  Enzyme: # Enzyme concentration
+    Value: [0, 0.0000001, 0.0000002, 0.0000003, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000005, 0.000007]
+  RNA: # polyA RNA substrate concentration
+    Value: [0.0000001, 0.00000025]
+  QT: # DNA quencher strand concentration
+    Value: 0.0000005
+  n: # polyA RNA length
+    Value: 18
+  Temperature: 
+    Value: 303.15
+Modeling parameters:
+  Fit: True
+  Use individual replicates: True
+  Minimizer: 
+    Initial: 'nelder'
+    Subsequent : 'leastsq'
+  Kinetic model: Distributive
+  Fit parameters:
+    k1:
+      Value: 27739.368966300745
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    km1:
+      Value: 5.176187339416231
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    k2:
+      Value: 6673520.470365472
+      Units: M^-1s^-1
+      Vary: True
+      Minimum: 0
+    km2:
+      Value: 32.52056679333865
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    kcat:
+      Value: 0.28367846668362007
+      Units: s^-1
+      Vary: True
+      Minimum: 0
+    dGo:
+      Value: -2.9272 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+    alpha:
+      Value: -3.6313 # kJ/mol Empirical value calculated from Sugimoto NAR paper
+      Units: kJmol^-1
+      Vary: False
+      Minimum: -20
+  Error estimation:
+    Monte Carlo:
+      Run: False
+      Iterations: 250
+    Error surfaces:
+      Run: False
+      Parameter range factor: 50
+      Points: 50
+Plot parameters:
+  Plot best fit: True
+  Plot residuals: True
+  Plot RNA population curves: True
+  Plot annealed fraction: True
+  Plot 2D population bars: False
+  Plot 3D population bars: False
