@@ -58,7 +58,7 @@ if len_rna == 1:
 
             # FRET data plots
             # axs[i].errorbar(,,color=colormap[color_idx])
-            ax.errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc='w',mec=colormap[color_idx],mew=2,capsize=3,capthick=1.5,
+            ax.errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc=colormap[color_idx],mec=colormap[color_idx],mew=1,capsize=0,capthick=1,
                             ecolor=colormap[color_idx],label = line_label)
             
             ax.set_title(f"{protein} + {rna*1e9:.0f} nM RNA")
@@ -81,7 +81,7 @@ else:
 
             # FRET data plots
             # axs[i].errorbar(,,color=colormap[color_idx])
-            axs[i].errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc='w',mec=colormap[color_idx],mew=2,capsize=3,capthick=1.5,
+            axs[i].errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc=colormap[color_idx],mec=colormap[color_idx],mew=1,capsize=0,capthick=1,
                             ecolor=colormap[color_idx],label = line_label)
             
             axs[i].set_title(f"{protein} + {rna*1e9:.0f} nM RNA")
@@ -98,4 +98,5 @@ else:
                 # plt.setp(legend.get_title(), fontsize=12)
 data_fig.tight_layout()
 data_fig.savefig(f"{file_name}_plotted.pdf", format="pdf")
-
+data_fig.savefig(f"{file_name}_plotted.png", format="png", dpi=600)
+data_fig.savefig(f"{file_name}_plotted.svg", format="svg")
