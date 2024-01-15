@@ -12,12 +12,12 @@ from minimization import objective_wrapper, residuals, sum_of_squared_residuals
 from lmfit import Parameters, minimize, report_fit
 from error_analysis import ErrorAnalysis
 from icecream import ic
-
 ############################### TO DO #################################
 # - Check first point in fitting
 # - Deepcopy pandas df in Experiment and Models
 # - Move FRET normalization to Experiment class, or somewhere smarter
 #######################################################################
+
 
 def main():
 
@@ -123,6 +123,7 @@ def main():
     plot_name = config_params['Output plot file']
     plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag)
     plot_handler.run_plots()
+
 
 if __name__ == '__main__':
     main()

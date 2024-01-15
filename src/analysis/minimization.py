@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import numpy as np
 from icecream import ic
+
 
 def objective_wrapper(params, experiment, kinetic_model, hybridization_model, simulate_full_model, print_current_params=True):
 
@@ -20,6 +18,7 @@ def objective_wrapper(params, experiment, kinetic_model, hybridization_model, si
     
     return resid
 
+
 def residuals(ydata, predicted):
 
     resid = []
@@ -27,6 +26,7 @@ def residuals(ydata, predicted):
         resid.append((ydata[i] - predicted[i])) 
 
     return resid
+
 
 def sum_of_squared_residuals(residuals):
 
