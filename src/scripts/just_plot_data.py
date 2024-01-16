@@ -41,6 +41,7 @@ colormap = cm.inferno(np.linspace(1, 0, points+1))
 colormap = colormap[1:]
 
 max_time = round(np.max([np.max(v) for v in mean_df.Time]),-3)
+max_time = 4000
 xlim = [0-0.03*max_time, max_time+0.03*max_time]
 xticks = np.linspace(0,max_time,6)
 ylim = [-0.05,1.05]
