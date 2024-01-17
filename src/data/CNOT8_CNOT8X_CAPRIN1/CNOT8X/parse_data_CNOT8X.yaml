@@ -1,0 +1,9 @@
+Sample name: CNOT8X
+Data to load: 
+  File 1: 231207_CNOT8X_noCAPRIN1_100nMRNA_fluor_data.csv
+  File 2: 231207_CNOT8X_noCAPRIN1_250nMRNA_fluor_data.csv
+Time arrays: ../../time_arrays.csv
+Output file name: CNOT8X_100-250nMRNA_FRET_data_to_fit
+Save plot as:
+  PDF: True
+  PNG: True
