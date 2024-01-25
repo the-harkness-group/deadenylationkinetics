@@ -10,11 +10,12 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy import interpolate
 from icecream import ic
+from copy import deepcopy
 
 
 class PlotHandler:
 
-    def __init__(self, experiments, kinetic_models, hybridization_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag):
+    def __init__(self, experiments, kinetic_models, hybridization_models, resids, normalized_resids, sample_name, plot_name, plot_mean_flag, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag):
 
         self.experiments = experiments
         self.kinetic_models = kinetic_models
@@ -24,6 +25,7 @@ class PlotHandler:
         self.sample_name = sample_name
         self.timesample = [0,30,60,120,300,600,900,1200,1500,1800,2100,2400,3600] # Time points at which to make bar plots of the RNA populations
 
+        self.plot_mean_flag = plot_mean_flag
         self.best_fit_flag = best_fit_flag
         self.residual_flag = residual_flag
         self.RNA_populations_flag = RNA_populations_flag
@@ -58,11 +60,39 @@ class PlotHandler:
 
 
     @staticmethod
-    def plot_best_fit(experiments, kinetic_models, hybridization_models, enz_colors, sample_name, pdf):
+    def plot_best_fit(experiments, kinetic_models, hybridization_models, enz_colors, sample_name, pdf, plot_mean_flag):
 
         for j, experiment in enumerate(experiments): # Plot individual replicates on separate plots to see fits more clearly
+            
             kinetic_model = kinetic_models[j]
-            hybridization_model = hybridization_models[j]
+            hybridization_model = hybridization_models[j]            
+            
+            if plot_mean_flag == True:
+                for r, rna in enumerate(experiment.rna):
+                    for e,enzyme in enumerate(experiment.enzyme):
+                        experiment.unique_time.append([])
+                        experiment.mean_fret.append([])
+                        experiment.fret_std.append([])
+                        experiment.mean_norm_fret.append([])
+                        experiment.norm_fret_std.append([])                    
+                        for t,time in enumerate(np.unique(experiment.time[e])):
+                            filtered_fret = experiment.fret[e][np.where(experiment.time[e] == time)[0]]
+                            mean_fret = filtered_fret.mean()
+                            stdev_fret = filtered_fret.std()
+                            stdev_fret = stdev_fret if not np.isnan(stdev_fret) else 0
+
+                            filtered_norm_fret = hybridization_model.normalized_experimental_fret[e][np.where(experiment.time[e] == time)[0]]
+                            mean_norm_fret = filtered_norm_fret.mean()
+                            stdev_norm_fret = filtered_norm_fret.std()
+                            stdev_norm_fret = stdev_norm_fret if not np.isnan(stdev_norm_fret) else 0
+
+                            experiment.unique_time[e].append(time)
+                            experiment.mean_fret[e].append(mean_fret)
+                            experiment.mean_norm_fret[e].append(mean_norm_fret)
+                            experiment.fret_std[e].append(stdev_fret)
+                            experiment.norm_fret_std[e].append(stdev_norm_fret)
+            else:
+                continue
 
             data_fit_fig = plt.subplots(1,1,figsize=(7,5)) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
             normalized_data_fit_fig = plt.subplots(1,1,figsize=(7,5))
@@ -77,15 +107,16 @@ class PlotHandler:
                 line_label = f"{enzyme*1e6}"
 
                 # FRET data plots
-                data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.fret[i],color=enz_colors[color_idx])
-                # data_fit_fig[1].errorbar(experiment.time[i],experiment.fret[i],yerr=experiment.fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,
-                #                          ecolor=enz_colors[color_idx])
-                data_fit_fig[1].scatter(experiment.time[i],experiment.fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)
-                normalized_data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.normalized_fret[i],color=enz_colors[color_idx])
-                # normalized_data_fit_fig[1].errorbar(experiment.time[i],hybridization_model.normalized_experimental_fret[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,
-                #                                     mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
-                normalized_data_fit_fig[1].scatter(experiment.time[i],hybridization_model.normalized_experimental_fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)                
-
+                data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.fret[i],color=enz_colors[color_idx],label=line_label)
+                normalized_data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.normalized_fret[i],color=enz_colors[color_idx],label=line_label)
+                if plot_mean_flag == True:
+                    data_fit_fig[1].errorbar(experiment.unique_time[i],experiment.mean_fret[i],yerr=experiment.fret_std[i],fmt='o',markersize=5,mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,
+                                            ecolor=enz_colors[color_idx])
+                    normalized_data_fit_fig[1].errorbar(experiment.unique_time[i],experiment.mean_norm_fret[i],yerr=experiment.norm_fret_std[i],fmt='o',markersize=5,mfc='w',
+                                                        mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
+                else:
+                    data_fit_fig[1].scatter(experiment.time[i],experiment.fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0)
+                    normalized_data_fit_fig[1].scatter(experiment.time[i],hybridization_model.normalized_experimental_fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0)                
 
             data_fit_fig[1].set_xlim(xlim)
             data_fit_fig[1].set_xticks(xticks)
@@ -120,12 +151,34 @@ class PlotHandler:
 
 
     @staticmethod
-    def plot_residuals(experiments, kinetic_models, hybridization_models, normalized_residuals, enz_colors, pdf):
+    def plot_residuals(experiments, kinetic_models, hybridization_models, normalized_residuals, enz_colors, pdf, plot_mean_flag):
 
         for j, experiment in enumerate(experiments): # Plot individual replicates on separate plots to see fits more clearly
             kinetic_model = kinetic_models[j]
             hybridization_model = hybridization_models[j]
             normalized_residual = normalized_residuals[j]
+
+            if plot_mean_flag == True:
+                for r, rna in enumerate(experiment.rna):
+                    for e,enzyme in enumerate(experiment.enzyme):
+                        experiment.unique_time.append([])
+                        experiment.mean_resid.append([])
+                        experiment.resid_std.append([])                
+                        for t,time in enumerate(np.unique(experiment.time[e])):
+                            filtered_resid = normalized_residual[e][np.where(experiment.time[e] == time)[0]]
+                            mean_resid = filtered_resid.mean()
+                            stdev_resid = filtered_resid.std()
+                            stdev_resid = stdev_resid if not np.isnan(stdev_resid) else 0
+
+                            filtered_norm_fret = hybridization_model.normalized_experimental_fret[e][np.where(experiment.time[e] == time)[0]]
+                            mean_norm_fret = filtered_norm_fret.mean()
+                            stdev_norm_fret = filtered_norm_fret.std()
+                            stdev_norm_fret = stdev_norm_fret if not np.isnan(stdev_norm_fret) else 0
+
+                            experiment.mean_resid[e].append(mean_resid)
+                            experiment.resid_std[e].append(stdev_resid)
+            else:
+                continue
 
             resid_fig = plt.subplots(len(experiment.enzyme),1,figsize=(7,len(experiment.enzyme))) # One subplot for each set of residuals to see more clearly
 
@@ -139,14 +192,18 @@ class PlotHandler:
             for i, enzyme in enumerate(experiment.enzyme):
                 color_idx = i
                 line_label = f"{enzyme*1e6} $\mu$M"
-                # resid_fig[1][i].errorbar(experiment.time[i],normalized_residual[i],yerr=hybridization_model.normalized_fret_error[i],fmt='o',markersize=8,mfc='w',mec=enz_colors[color_idx],mew=2,
-                #                          capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
-                resid_fig[1][i].scatter(experiment.time[i],normalized_residual[i],color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)
+
+                if plot_mean_flag == True:
+                    resid_fig[1][i].errorbar(experiment.unique_time[i],experiment.mean_resid[i],yerr=experiment.resid_std[i],fmt='o',markersize=5,mfc='w',mec=enz_colors[color_idx],mew=2,
+                                            capsize=3,capthick=1.5,ecolor=enz_colors[color_idx],label=line_label)
+                else:
+                    resid_fig[1][i].scatter(experiment.time[i],normalized_residual[i],color=enz_colors[color_idx],alpha=0.8,linewidth=0,label=line_label)
+                
                 resid_fig[1][i].set_ylim([-0.28, 0.28])
                 resid_fig[1][i].set_xlim(xlim)
                 resid_fig[1][i].set_xticks(xticks)
                 
-                L = resid_fig[1][i].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',markerscale=0)
+                L = resid_fig[1][i].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',markerscale=0, )
                 for k,text in enumerate(L.get_texts()):
                     text.set_color(enz_colors[i])
                     text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[i]),path_effects.Normal()])
@@ -386,10 +443,10 @@ class PlotHandler:
     def run_plots(self):
 
         if self.best_fit_flag == True:
-            self.plot_best_fit(self.experiments, self.kinetic_models, self.hybridization_models, self.enzyme_colors, self.sample_name, self.pdf)
+            self.plot_best_fit(self.experiments, self.kinetic_models, self.hybridization_models, self.enzyme_colors, self.sample_name, self.pdf, self.plot_mean_flag)
 
         if self.residual_flag == True:
-            self.plot_residuals(self.experiments, self.kinetic_models, self.hybridization_models, self.normalized_residuals, self.enzyme_colors, self.pdf)
+            self.plot_residuals(self.experiments, self.kinetic_models, self.hybridization_models, self.normalized_residuals, self.enzyme_colors, self.pdf, self.plot_mean_flag)
                 
         if self.RNA_populations_flag == True:
             self.plot_all_populations(self.experiments, self.kinetic_models, self.sample_name, self.pdf)

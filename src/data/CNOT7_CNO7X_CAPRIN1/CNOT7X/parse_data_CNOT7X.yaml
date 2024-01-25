@@ -2,9 +2,9 @@ Sample name: CNOT7X
 Data to load: 
   File 1: 230917_CNOT7X_100nMRNA_fluor_data.csv
   File 2: 230920_CNOT7X_100nMRNA_fluor_data.csv
-  File 3: 231207_CNOT7X_250nMRNA_fluor_data.csv
+  # File 3: 231207_CNOT7X_250nMRNA_fluor_data.csv
 Time arrays: ../../time_arrays.csv
-Output file name: CNOT7X_100-250nMRNA_FRET_data_to_fit
+Output file name: CNOT7X_100nMRNA_FRET_data_to_fit
 Save plot as:
   PDF: True
   PNG: True

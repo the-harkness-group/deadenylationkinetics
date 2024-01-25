@@ -125,29 +125,30 @@ class DistributiveDeadenylation():
         kcat = params['kcat'].value
 
         self.setup_concentrations()
-        for i, v in enumerate(self.enzyme):
-            if self.enzyme[i] == 0: # No enzyme means nothing happens, all RNA is full length at all times
-                self.concentrations[f'E*'].append([0 for x in range(len(self.time[i]))])
-                self.concentrations[f'E'].append([0 for x in range(len(self.time[i]))])
-                self.concentrations[f'A1'].append([0 for x in range(len(self.time[i]))])
+        for r, rna in enumerate(self.rna):
+            for i, v in enumerate(self.enzyme):
+                if self.enzyme[i] == 0: # No enzyme means nothing happens, all RNA is full length at all times
+                    self.concentrations[f'E*'].append([0 for x in range(len(self.time[i]))])
+                    self.concentrations[f'E'].append([0 for x in range(len(self.time[i]))])
+                    self.concentrations[f'A1'].append([0 for x in range(len(self.time[i]))])
 
-                for l in range(1, self.n+1):
-                    if l == self.n:
-                        self.concentrations[f'TA{self.n}'].append([self.rna for x in range(len(self.time[i]))])
-                        self.concentrations[f'ETA{self.n}'].append([0 for x in range(len(self.time[i]))])
-                    else:
-                        self.concentrations[f'TA{l}'].append([0 for x in range(len(self.time[i]))])
-                        self.concentrations[f'ETA{l}'].append([0 for x in range(len(self.time[i]))])
+                    for l in range(1, self.n+1):
+                        if l == self.n:
+                            self.concentrations[f'TA{self.n}'].append([rna for x in range(len(self.time[i]))])
+                            self.concentrations[f'ETA{self.n}'].append([0 for x in range(len(self.time[i]))])
+                        else:
+                            self.concentrations[f'TA{l}'].append([0 for x in range(len(self.time[i]))])
+                            self.concentrations[f'ETA{l}'].append([0 for x in range(len(self.time[i]))])
 
-            else:
-                self.initial_concentration_guesses(self.enzyme[i], self.rna, k1, km1, self.n)
-                param_args = {'k1':k1, 'km1':km1, 'k2':k2, 'km2':km2, 'kcat':kcat, 'n':self.n}
-                time_span = (np.min(self.time[i]),np.max(self.time[i]))
-                initial_concs = self.C0
-                rate_func = self.relaxation_matrix
-                t_return = np.unique(np.array(self.time[i]))  # only solve for unique time points
-                solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
-                self.extract_solved_concentrations(solver_result,self.time[i])
+                else:
+                    self.initial_concentration_guesses(self.enzyme[i], rna, k1, km1, self.n)
+                    param_args = {'k1':k1, 'km1':km1, 'k2':k2, 'km2':km2, 'kcat':kcat, 'n':self.n}
+                    time_span = (np.min(self.time[i]),np.max(self.time[i]))
+                    initial_concs = self.C0
+                    rate_func = self.relaxation_matrix
+                    t_return = np.unique(np.array(self.time[i]))  # only solve for unique time points
+                    solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
+                    self.extract_solved_concentrations(solver_result,self.time[i])
 
 class DuplexHybridization:
 

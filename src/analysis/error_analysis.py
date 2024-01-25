@@ -26,7 +26,7 @@ class ErrorAnalysis():
         self.points = points
 
     @staticmethod
-    def parameter_range(opt_param, scaling_factor=100, num_points=25):
+    def parameter_range(opt_param, scaling_factor=10, num_points=10):
         # Generate parameter vectors for correlation surfaces
 
         opt_param_range = np.logspace(np.log10(opt_param/scaling_factor), np.log10(opt_param*scaling_factor), num_points) # +/- scaling factor orders of magnitude from optimal value
@@ -112,7 +112,7 @@ class ErrorAnalysis():
                     print(f'Monte Carlo iteration {ax} completed.')
                     {self.monte_carlo_parameters[k].append(result.params[k].value) for k in self.monte_carlo_parameters.keys()}
         end = time.time()
-        print(f"### Elapsed parameter correlation fit time was {end-start} s ###")
+        print(f"### Elapsed parameter correlation fit time was {end-start:.2f} s ###")
 
         for k in self.monte_carlo_parameters.keys():
             self.monte_carlo_errors[f"{k} error"] = np.std(self.monte_carlo_parameters[k])
@@ -138,9 +138,10 @@ class ErrorAnalysis():
     def monte_carlo_parallel_fit_task(initial_guess_params, perfect_experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper, rmsd, min_method='leastsq', print_current_params=False):
 
         perturbed_experiment = deepcopy(perfect_experiment)
-        perturbed_experiment.fret = np.array(perturbed_experiment.fret) + np.random.RandomState().normal(scale=rmsd, size=(np.size(perturbed_experiment.fret, 0), np.size(perturbed_experiment.fret, 1)))
-        perturbed_minimizer_result = minimize(objective_wrapper, initial_guess_params, method = min_method, args=(perturbed_experiment, kinetic_model, hybridization_model, simulate_full_model, print_current_params))
-        ic(perturbed_minimizer_result)
+        for i,x in enumerate(perturbed_experiment.fret):
+            perturbed_experiment.fret[i] = x + np.random.RandomState().normal(scale=rmsd,size=np.size(x, 0))
+        perturbed_minimizer_result = minimize(objective_wrapper, initial_guess_params, method = min_method, 
+        args=(perturbed_experiment, kinetic_model, hybridization_model, simulate_full_model, print_current_params))
         return perturbed_minimizer_result
 
     def parameter_correlation_surfaces(self, sample_name):
@@ -153,6 +154,7 @@ class ErrorAnalysis():
         levels = 8
         alpha=0.65
         linestyles='solid'
+
         linewidths=0.25
         for param_pairs in self.correlation_pairs.keys():
 
@@ -180,14 +182,15 @@ class ErrorAnalysis():
         pdf = make_pdf(f"{sample_name}_MonteCarlo_parameter_distributions_{self.monte_carlo_iterations}_iterations.pdf")
         for k in self.monte_carlo_parameters.keys():
             fig, ax = plt.subplots(1,1)
-            ax.hist(self.monte_carlo_parameters[k], bins=50)
+            ax.hist(self.monte_carlo_parameters[k], bins=100)
+            # ax.set_xscale('log')
             avg = np.mean(self.monte_carlo_parameters[k])
             one_sd = self.monte_carlo_errors[f"{k} error"]
-            two_sd = 2*one_sd
-            lines = [avg, avg+one_sd, avg-one_sd, avg+two_sd, avg-two_sd]
-            ymin = [0, 0, 0, 0, 0]
-            ymax = np.repeat(self.monte_carlo_iterations/4, 5)
-            ax.vlines(lines, ymin, ymax, linestyles='--', color='r')
+            #two_sd = 2*one_sd
+            #lines = [avg, avg+one_sd, avg-one_sd, avg+two_sd, avg-two_sd]
+            #ymin = [0, 0, 0, 0, 0]
+            #ymax = np.repeat(self.monte_carlo_iterations/4, 5)
+            #ax.vlines(lines, ymin, ymax, linestyles='--', color='r')
             ax.set_title(f"{k}: {avg} $\pm$ {one_sd} (1 std.)")
             ax.set_xlabel(k)
             ax.set_ylabel('Count')
@@ -223,10 +226,13 @@ class ErrorAnalysis():
 
     def save_monte_carlo_results(self, sample_name):
 
-        monte_carlo_dict = {'Parameter':[], 'Value':[], 'Error':[]}
+        monte_carlo_results = {'Parameter':[], 'Opt Value':[], 'Error':[]}
+        monte_carlo_df = pd.DataFrame(self.monte_carlo_parameters)
         for k1, k2 in zip(self.monte_carlo_parameters, self.monte_carlo_errors):
-            monte_carlo_dict['Parameter'].append(k1)
-            monte_carlo_dict['Value'].append(self.opt_params[k1].value)
-            monte_carlo_dict['Error'].append(self.monte_carlo_errors[k2])
-        monte_carlo_df = pd.DataFrame(monte_carlo_dict)
-        monte_carlo_df.to_csv(f"{sample_name}_MonteCarlo_errors_{self.monte_carlo_iterations}_iterations.csv", index=False)
+            monte_carlo_results['Parameter'].append(k1)
+            monte_carlo_results['Opt Value'].append(self.opt_params[k1].value)
+            monte_carlo_results['Error'].append(self.monte_carlo_errors[k2])
+        monte_carlo_results = pd.DataFrame(monte_carlo_results)
+        monte_carlo_df.to_csv(f"{sample_name}_MonteCarlo_values_{self.monte_carlo_iterations}_iterations.csv", index=False)
+        monte_carlo_results.to_csv(f"{sample_name}_MonteCarlo_errors_{self.monte_carlo_iterations}_iterations.csv", index=False)
+        

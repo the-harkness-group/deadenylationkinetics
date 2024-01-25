@@ -1,7 +1,7 @@
 Sample name: CNOT8X
-Data file to fit: CNOT8X_RNA-100nM-250nM-data_for_fit_sorted.csv
-Output plot file: CNOT8X_100-250nMRNA_FRET_kinetics_fits_sorted.pdf
-Optimal fit parameter file: CNOT8X_100-250nMRNA_optimal_fit_params_sorted.csv
+Data file to fit: CNOT8X_100nMRNA_FRET_data_to_fit.csv
+Output plot file: CNOT8X_100nMRNA_FRET_kinetics_fits.pdf
+Optimal fit parameter file: CNOT8X_100nMRNA_optimal_fit_params.csv
 Experimental parameters:
   Enzyme: # Enzyme concentration
     Value: [0, 0.0000001, 0.0000002, 0.0000003, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000005, 0.000007]
@@ -22,27 +22,27 @@ Modeling parameters:
   Kinetic model: Distributive
   Fit parameters:
     k1:
-      Value: 27739.368966300745
+      Value: 100000000.0
       Units: s^-1
-      Vary: True
+      Vary: False
       Minimum: 0
     km1:
-      Value: 5.176187339416231
+      Value: 0.00000001
       Units: s^-1
-      Vary: True
+      Vary: False
       Minimum: 0
     k2:
-      Value: 6673520.470365472
+      Value: 15269.087713547562
       Units: M^-1s^-1
       Vary: True
       Minimum: 0
     km2:
-      Value: 32.52056679333865
+      Value: 2.032918705717
       Units: s^-1
       Vary: True
       Minimum: 0
     kcat:
-      Value: 0.28367846668362007
+      Value: 0.742578448808
       Units: s^-1
       Vary: True
       Minimum: 0
@@ -58,13 +58,14 @@ Modeling parameters:
       Minimum: -20
   Error estimation:
     Monte Carlo:
-      Run: False
+      Run: True
       Iterations: 250
     Error surfaces:
       Run: False
       Parameter range factor: 50
       Points: 50
 Plot parameters:
+  Plot mean data: True
   Plot best fit: True
   Plot residuals: True
   Plot RNA population curves: True

@@ -48,7 +48,6 @@ def main():
 
         opt_param_units = [config_params['Modeling parameters']['Fit parameters'][k]['Units'] for k in config_params['Modeling parameters']['Fit parameters'].keys() if config_params['Modeling parameters']['Fit parameters'][k]['Vary'] == True]
         all_param_units = [config_params['Modeling parameters']['Fit parameters'][k]['Units'] for k in config_params['Modeling parameters']['Fit parameters'].keys()]
-        ic(all_param_units)
 
         print('\n### OPTIMAL REPLICATE FIT PARAMETERS ###')
         # Extract final parameters from each replicate and average them
@@ -113,6 +112,7 @@ def main():
     
     # Do plotting
 
+    plot_mean_flag = config_params['Plot parameters']['Plot mean data']
     best_fit_flag = config_params['Plot parameters']['Plot best fit']
     residual_flag = config_params['Plot parameters']['Plot residuals']
     RNA_populations_flag = config_params['Plot parameters']['Plot RNA population curves']
@@ -121,7 +121,7 @@ def main():
     bar_3d_flag = config_params['Plot parameters']['Plot 3D population bars']
     sample_name = config_params['Sample name']
     plot_name = config_params['Output plot file']
-    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag)
+    plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, plot_mean_flag, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag)
     plot_handler.run_plots()
 
 if __name__ == '__main__':

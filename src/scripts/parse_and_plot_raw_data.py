@@ -86,6 +86,7 @@ for i,file in enumerate(data_to_load):
                             norm_IDD = temp_IDD - abs(blank_IDD_start-temp_IDD_blank)
                             norm_IDA = temp_IDA - abs(blank_IDA_start-temp_IDA_blank)
                             FRET = norm_IDA/(norm_IDD+norm_IDA)
+                            enzyme = round(enzyme*1e6,2)/1e6
                             for j,rep in enumerate(FRET):
                                 fret_array.append([temp_time[j][i],rep,0,enzyme,1,rna,dna])
 
@@ -135,10 +136,16 @@ if len_rna == 1:
         max_time = 8000
     else:
         max_time = max_time
+    max_time = 2400
     xlim = [0-0.03*max_time, max_time+0.03*max_time]
     xticks = np.linspace(0,max_time,6)
     for j, enzyme in enumerate(enzymes):
+        
             filtered_df = mean_df[(mean_df["RNA"] == rna) & (mean_df["Enzyme"] == enzyme)]
+                      
+            # color_idx = np.where(colorpoints == round(enzyme*1e5,2))
+            # idx_enzyme = round(enzyme*1e5,2)
+            # color_idx = np.where(colorpoints == idx_enzyme)[0]
             color_idx = j
             line_label = f"{enzyme*1e6:.1f}"
 
