@@ -179,7 +179,7 @@ class ErrorAnalysis():
 
     def monte_carlo_distributions(self, sample_name):
 
-        pdf = make_pdf(f"{sample_name}_MonteCarlo_parameter_distributions_{self.monte_carlo_iterations}_iterations.pdf")
+        pdf = make_pdf(f"output/{sample_name}_MonteCarlo_parameter_distributions_{self.monte_carlo_iterations}_iterations.pdf")
         for k in self.monte_carlo_parameters.keys():
             fig, ax = plt.subplots(1,1)
             ax.hist(self.monte_carlo_parameters[k], bins=100)
@@ -222,7 +222,7 @@ class ErrorAnalysis():
             result_dfs.append(pd.DataFrame(result_dict))
 
         merged_result_df = pd.concat(result_dfs, axis=1, keys=(self.correlation_pairs.keys()))
-        merged_result_df.to_csv(f"{sample_name}_parameter_correlation_results.csv")
+        merged_result_df.to_csv(f"output/{sample_name}_parameter_correlation_results.csv")
 
     def save_monte_carlo_results(self, sample_name):
 
@@ -233,6 +233,6 @@ class ErrorAnalysis():
             monte_carlo_results['Opt Value'].append(self.opt_params[k1].value)
             monte_carlo_results['Error'].append(self.monte_carlo_errors[k2])
         monte_carlo_results = pd.DataFrame(monte_carlo_results)
-        monte_carlo_df.to_csv(f"{sample_name}_MonteCarlo_values_{self.monte_carlo_iterations}_iterations.csv", index=False)
-        monte_carlo_results.to_csv(f"{sample_name}_MonteCarlo_errors_{self.monte_carlo_iterations}_iterations.csv", index=False)
+        monte_carlo_df.to_csv(f"output/{sample_name}_MonteCarlo_values_{self.monte_carlo_iterations}_iterations.csv", index=False)
+        monte_carlo_results.to_csv(f"output/{sample_name}_MonteCarlo_errors_{self.monte_carlo_iterations}_iterations.csv", index=False)
         

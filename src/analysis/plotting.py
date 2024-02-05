@@ -53,7 +53,7 @@ class PlotHandler:
 
         self.enzyme_bar_colors = ['#80cdc1', '#c7eae5'] # 2D bar plots
 
-        self.pdf = make_pdf(plot_name)
+        self.pdf = make_pdf(f"output/{plot_name}")
 
     def addattr(self, x, v):
         self.__dict__[x] = v
@@ -110,43 +110,38 @@ class PlotHandler:
                 data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.fret[i],color=enz_colors[color_idx],label=line_label)
                 normalized_data_fit_fig[1].plot(hybridization_model.time[i],hybridization_model.normalized_fret[i],color=enz_colors[color_idx],label=line_label)
                 if plot_mean_flag == True:
-                    data_fit_fig[1].errorbar(experiment.unique_time[i],experiment.mean_fret[i],yerr=experiment.fret_std[i],fmt='o',markersize=5,mfc='w',mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,
-                                            ecolor=enz_colors[color_idx])
+                    data_fit_fig[1].errorbar(experiment.unique_time[i],experiment.mean_fret[i],yerr=experiment.fret_std[i],fmt='o',markersize=5,mfc='w',
+                                             mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
                     normalized_data_fit_fig[1].errorbar(experiment.unique_time[i],experiment.mean_norm_fret[i],yerr=experiment.norm_fret_std[i],fmt='o',markersize=5,mfc='w',
                                                         mec=enz_colors[color_idx],mew=2,capsize=3,capthick=1.5,ecolor=enz_colors[color_idx])
                 else:
                     data_fit_fig[1].scatter(experiment.time[i],experiment.fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0)
                     normalized_data_fit_fig[1].scatter(experiment.time[i],hybridization_model.normalized_experimental_fret[i],s=30,color=enz_colors[color_idx],alpha=0.8,linewidth=0)                
+            
+            for plot in [data_fit_fig, normalized_data_fit_fig]:
+                plot[1].set_xlim(xlim)
+                plot[1].set_xticks(xticks)
+                plot[1].set_xticklabels(xticks,rotation=45)
+                plot[1].set_xlabel('Time (s)')
+                if plot == data_fit_fig:
+                    plot[1].set_ylabel('FRET')
+                elif plot == normalized_data_fit_fig:
+                    plot[1].set_ylabel('Normalized FRET')
+                    plot[1].set_ylim([-0.25, 1.25])
+                if len(experiments) > 1:
+                    plot[1].set_title(f"Replicate {j+1}")
+                else:
+                    plot[1].set_title(f"Average of replicates")
 
-            data_fit_fig[1].set_xlim(xlim)
-            data_fit_fig[1].set_xticks(xticks)
-            data_fit_fig[1].set_xlabel('Time (s)')
-            data_fit_fig[1].set_ylabel('FRET')
-            normalized_data_fit_fig[1].set_xlim(xlim)
-            normalized_data_fit_fig[1].set_xticks(xticks)
-            normalized_data_fit_fig[1].set_xticklabels(xticks,rotation=45)
-            normalized_data_fit_fig[1].set_ylim([-0.25, 1.2])
-            normalized_data_fit_fig[1].set_xlabel('Time (s)')
-            normalized_data_fit_fig[1].set_ylabel('Normalized FRET')
-            if len(experiments) > 1:
-                data_fit_fig[1].set_title(f"Replicate {j+1}")
-                normalized_data_fit_fig[1].set_title(f"Replicate {j+1}")
-            else:
-                data_fit_fig[1].set_title(f"Average of replicates")
-                normalized_data_fit_fig[1].set_title(f"Average of replicates - normalized")
-            L = normalized_data_fit_fig[1].legend(frameon=False,handlelength=0,handleheight=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
-            for k,text in enumerate(L.get_texts()):
-                text.set_color(enz_colors[k])
-                text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[k]),path_effects.Normal()])
-            L = data_fit_fig[1].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',title=f"[{sample_name}] $\mu$M",markerscale=0)
-            for k,text in enumerate(L.get_texts()):
-                text.set_color(enz_colors[k])
-                text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[k]),path_effects.Normal()])
-
-            data_fit_fig[0].tight_layout()
-            normalized_data_fit_fig[0].tight_layout()
-            pdf.savefig(data_fit_fig[0])
-            pdf.savefig(normalized_data_fit_fig[0])
+                L = plot[1].legend(loc='upper right',title=f"[{sample_name}] $\mu$M",frameon=False,handlelength=0,handletextpad=0,markerscale=0)
+                for k,text in enumerate(L.get_texts()):
+                    text.set_color('white')
+                    text.set_path_effects([path_effects.Stroke(linewidth=2.5, foreground=enz_colors[k]),path_effects.Normal()])
+                for item in L.legendHandles:
+                    item.set_visible(False)            
+            
+                plot[0].tight_layout()
+                pdf.savefig(plot[0])
         plt.close()
 
 
@@ -169,11 +164,6 @@ class PlotHandler:
                             mean_resid = filtered_resid.mean()
                             stdev_resid = filtered_resid.std()
                             stdev_resid = stdev_resid if not np.isnan(stdev_resid) else 0
-
-                            filtered_norm_fret = hybridization_model.normalized_experimental_fret[e][np.where(experiment.time[e] == time)[0]]
-                            mean_norm_fret = filtered_norm_fret.mean()
-                            stdev_norm_fret = filtered_norm_fret.std()
-                            stdev_norm_fret = stdev_norm_fret if not np.isnan(stdev_norm_fret) else 0
 
                             experiment.mean_resid[e].append(mean_resid)
                             experiment.resid_std[e].append(stdev_resid)
@@ -202,11 +192,16 @@ class PlotHandler:
                 resid_fig[1][i].set_ylim([-0.28, 0.28])
                 resid_fig[1][i].set_xlim(xlim)
                 resid_fig[1][i].set_xticks(xticks)
-                
-                L = resid_fig[1][i].legend(frameon=False,handlelength=0,handletextpad=0,loc='upper right',markerscale=0, )
+
+                # get handles
+                handles, labels = resid_fig[1][i].get_legend_handles_labels()
+                # remove the errorbars
+                handles = [h[0] for h in handles]
+                # use them in the legend
+                L = resid_fig[1][i].legend(handles, labels, loc='upper right',frameon=False,handlelength=0,handletextpad=0,markerscale=0)
                 for k,text in enumerate(L.get_texts()):
-                    text.set_color(enz_colors[i])
-                    text.set_path_effects([path_effects.Stroke(linewidth=1.2, foreground=enz_colors[i]),path_effects.Normal()])
+                    text.set_color('white')
+                    text.set_path_effects([path_effects.Stroke(linewidth=2.5, foreground=enz_colors[i]),path_effects.Normal()])
 
                 if i < len(experiment.enzyme) - 1:
                     resid_fig[1][i].set_xticklabels([])

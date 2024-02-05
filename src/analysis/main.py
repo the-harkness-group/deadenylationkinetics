@@ -12,6 +12,7 @@ from minimization import objective_wrapper, residuals, sum_of_squared_residuals
 from lmfit import Parameters, minimize, report_fit
 from error_analysis import ErrorAnalysis
 from icecream import ic
+import os
 
 ############################### TO DO #################################
 # - Check first point in fitting
@@ -30,9 +31,14 @@ def main():
     kinetic_models = []
     hybridization_models = []
 
+    # Create the output directory if it doesn't exist
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # Run fit, either sequential fitting of individual replicates or average of replicates
     if config_params['Modeling parameters']['Fit'] == True:
-        min_method = config_params['Modeling parameters']['Minimizer']['Initial']
+        min_method = config_params['Modeling parameters']['Minimizer']
 
         print("\n***** Fitting experimental data *****\n")
 
@@ -65,31 +71,9 @@ def main():
         except Exception as e:
             print(f"Could not parse optimal parameters for display/export: {e}")
 
-        
-        # Simulate best fit data and plot, need to do it for each replicate
-        resids, normalized_resids, best_kin_models, best_hybr_models = calculate_residuals_simulate_best_fit_data(experiments, minimizer_params, config_params, residuals)
-
-        if config_params['Modeling parameters']['Error estimation']['Monte Carlo']['Run'] == True:
-            monte_carlo_iterations = config_params['Modeling parameters']['Error estimation']['Monte Carlo']['Iterations']
-            rmsd = np.sqrt(minimizer_result.chisqr/minimizer_result.ndata)
-            error_analyzer = ErrorAnalysis(minimizer_result.params, monte_carlo_iterations, rmsd, None, None)
-            error_analyzer.monte_carlo_parameter_dictionary()
-            error_analyzer.monte_carlo_fits(experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper)
-            error_analyzer.monte_carlo_distributions(config_params['Sample name'])
-            error_analyzer.save_monte_carlo_results(config_params['Sample name'])
-
-        if config_params['Modeling parameters']['Error estimation']['Error surfaces']['Run'] == True:
-            range_factor = config_params['Modeling parameters']['Error estimation']['Error surfaces']['Parameter range factor']
-            points = config_params['Modeling parameters']['Error estimation']['Error surfaces']['Points']
-            error_analyzer = ErrorAnalysis(minimizer_result.params, None, None, range_factor, points)
-            error_analyzer.correlation_pairs()
-            error_analyzer.parameter_correlation_fits(experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper)
-            error_analyzer.parameter_correlation_surfaces(config_params['Sample name'])
-            error_analyzer.save_parameter_correlation_results(config_params['Sample name'])
-
         # Simulate best fit data and plot
         resids, normalized_resids, best_kin_models, best_hybr_models = calculate_residuals_simulate_best_fit_data(experiments, minimizer_params, config_params, residuals)
-
+        
         # Save best parameters in .csv
         try:
             write_optimal_parameter_csv(opt_params, opt_param_units, config_params['Optimal fit parameter file'])
@@ -111,7 +95,6 @@ def main():
         print(f'RSS for simulated data: {sum_of_squared_residuals(resids[0])}')
     
     # Do plotting
-
     plot_mean_flag = config_params['Plot parameters']['Plot mean data']
     best_fit_flag = config_params['Plot parameters']['Plot best fit']
     residual_flag = config_params['Plot parameters']['Plot residuals']
@@ -123,6 +106,26 @@ def main():
     plot_name = config_params['Output plot file']
     plot_handler = PlotHandler(experiments, best_kin_models, best_hybr_models, resids, normalized_resids, sample_name, plot_name, plot_mean_flag, best_fit_flag, residual_flag, RNA_populations_flag, annealed_fraction_flag, bar_2d_flag, bar_3d_flag)
     plot_handler.run_plots()
+
+    # Error analysis
+    if config_params['Modeling parameters']['Error estimation']['Monte Carlo']['Run'] == True:
+        monte_carlo_iterations = config_params['Modeling parameters']['Error estimation']['Monte Carlo']['Iterations']
+        rmsd = np.sqrt(minimizer_result.chisqr/minimizer_result.ndata)
+        error_analyzer = ErrorAnalysis(minimizer_result.params, monte_carlo_iterations, rmsd, None, None)
+        error_analyzer.monte_carlo_parameter_dictionary()
+        error_analyzer.monte_carlo_fits(experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper)
+        error_analyzer.monte_carlo_distributions(config_params['Sample name'])
+        error_analyzer.save_monte_carlo_results(config_params['Sample name'])
+
+    if config_params['Modeling parameters']['Error estimation']['Error surfaces']['Run'] == True:
+        range_factor = config_params['Modeling parameters']['Error estimation']['Error surfaces']['Parameter range factor']
+        points = config_params['Modeling parameters']['Error estimation']['Error surfaces']['Points']
+        error_analyzer = ErrorAnalysis(minimizer_result.params, None, None, range_factor, points)
+        error_analyzer.correlation_pairs()
+        error_analyzer.parameter_correlation_fits(experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper)
+        error_analyzer.parameter_correlation_surfaces(config_params['Sample name'])
+        error_analyzer.save_parameter_correlation_results(config_params['Sample name'])
+
 
 if __name__ == '__main__':
     main()
