@@ -1,0 +1,9 @@
+Sample name: CNOT7_CAPRIN1
+Data to load: 
+  File 1: ../230918_CNOT7_CAPRIN1_100nMRNA_fluor_data.csv
+  File 2: ../230920_CNOT7_CAPRIN1_100nMRNA_fluor_data.csv
+Time arrays: ../../../time_arrays.csv
+Output file name: CNOT7_CAPRIN1_100nMRNA_FRET_data_to_fit
+Save plot as:
+  PDF: True
+  PNG: True

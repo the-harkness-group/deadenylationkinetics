@@ -74,4 +74,4 @@ def write_optimal_parameter_csv(opt_params, opt_param_units, file):
                        'Units':[i for i in opt_param_units]}
     
     opt_params_df = pd.DataFrame(opt_params_dict)
-    opt_params_df.to_csv(file)
+    opt_params_df.to_csv(f"output/{file}")
