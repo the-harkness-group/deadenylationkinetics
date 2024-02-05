@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root
 from icecream import ic
+
 
 class DistributiveDeadenylation():
 
@@ -150,6 +148,7 @@ class DistributiveDeadenylation():
                     solver_result = solve_ivp(propagator,time_span,initial_concs,t_eval=t_return,method='BDF',first_step=1e-12,atol=1e-12,args=(rate_func, param_args))
                     self.extract_solved_concentrations(solver_result,self.time[i])
 
+
 class DuplexHybridization:
 
     def __init__(self, fret_experiment):
@@ -280,11 +279,13 @@ class DuplexHybridization:
                 self.extract_solved_concentrations(solver_result, i) # Need enzyme index to extend concentration list for each enzyme concentration
                 self.annealed_fraction[i].append(np.sum([self.concentrations[k][i][z]/self.rna for k in self.concentrations if ('Q' in k) & (k[0] != 'Q')])) # Want everything annealed to Q, i.e. TAiQ, but not free Q
 
+
 def propagator(t, C, func, constants): # Used in scipy.integrate.solve_ivp, general propagation function for use by kinetic model objects
 
     R = func(C, **constants) # Make relaxation matrix
 
     return np.matmul(R,C) # Calculates concentration fluxes, d/dt C
+
 
 def generate_model_objects(fret_experiment, fit_model):
 
@@ -295,6 +296,7 @@ def generate_model_objects(fret_experiment, fit_model):
 
     return kinetic_model, hybridization_model
 
+
 def simulate_full_model(params, kinetic_model, hybridization_model):
 
     kinetic_model.simulate_kinetics(params)
@@ -304,6 +306,7 @@ def simulate_full_model(params, kinetic_model, hybridization_model):
     hybridization_model.calculate_fret()
 
     return kinetic_model, hybridization_model
+
 
 def calculate_residuals_simulate_best_fit_data(fret_expts, opt_params, config_params, residuals):
     # Calculate fit residuals and simulate data over finely sampled experimental temperature range to generate smooth best fit data and population plots

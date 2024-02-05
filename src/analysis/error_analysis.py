@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -14,6 +11,7 @@ from matplotlib import cm
 from scipy.interpolate import griddata
 from copy import deepcopy
 from icecream import ic
+
 
 class ErrorAnalysis():
 

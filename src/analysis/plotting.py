@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.backends.backend_pdf
@@ -57,7 +54,6 @@ class PlotHandler:
 
     def addattr(self, x, v):
         self.__dict__[x] = v
-
 
     @staticmethod
     def plot_best_fit(experiments, kinetic_models, hybridization_models, enz_colors, sample_name, pdf, plot_mean_flag):
@@ -144,7 +140,6 @@ class PlotHandler:
                 pdf.savefig(plot[0])
         plt.close()
 
-
     @staticmethod
     def plot_residuals(experiments, kinetic_models, hybridization_models, normalized_residuals, enz_colors, pdf, plot_mean_flag):
 
@@ -220,7 +215,6 @@ class PlotHandler:
             pdf.savefig(resid_fig[0])
         plt.close()
 
-
     @staticmethod
     def plot_all_populations(experiments, kinetic_models, sample_name, pdf):
             
@@ -257,7 +251,6 @@ class PlotHandler:
                 pdf.savefig(all_populations_fig)
             plt.close()
 
-
     @staticmethod
     def plot_annealed_fraction(experiments, hybridization_models, enz_colors, sample_name, pdf):
 
@@ -284,7 +277,6 @@ class PlotHandler:
                 annealed_fraction_fig[0].tight_layout()
                 pdf.savefig(annealed_fraction_fig[0])
             plt.close()
-
 
     @staticmethod
     def plot_2d_population_bars(experiments, kinetic_models, hybridization_models, enzyme_colors, t_pop_colors, pdf, timesample):
@@ -348,7 +340,6 @@ class PlotHandler:
                     fig.tight_layout()
                     pdf.savefig(fig)
         plt.close()
-
 
     @staticmethod
     def plot_3d_population_bars(experiments, kinetic_models, hybridization_models, pdf, timesample, sample_name):
@@ -434,7 +425,6 @@ class PlotHandler:
                 pdf.savefig(fig)
         plt.close()
 
-
     def run_plots(self):
 
         if self.best_fit_flag == True:
@@ -456,7 +446,6 @@ class PlotHandler:
             self.plot_3d_population_bars(self.experiments, self.kinetic_models, self.hybridization_models, self.pdf, self.timesample, self.sample_name)                
         self.pdf.close()
 
-
     def get_colors(self, points=100, slice=1, colormap=cm.coolwarm, map_name='plot_colors', reversed=False):
 
         color_values = colormap(np.linspace(0, 1, points+2))
@@ -467,6 +456,7 @@ class PlotHandler:
             color_values = color_values[::-1]
 
         self.addattr(map_name, color_values)
+
 
 def make_pdf(pdf_name):
 

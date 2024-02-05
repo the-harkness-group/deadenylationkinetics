@@ -14,11 +14,13 @@ from error_analysis import ErrorAnalysis
 from icecream import ic
 import os
 
+
 ############################### TO DO #################################
 # - Check first point in fitting
 # - Deepcopy pandas df in Experiment and Models
 # - Move FRET normalization to Experiment class, or somewhere smarter
 #######################################################################
+
 
 def main():
 
@@ -125,7 +127,6 @@ def main():
         error_analyzer.parameter_correlation_fits(experiment, kinetic_model, hybridization_model, simulate_full_model, objective_wrapper)
         error_analyzer.parameter_correlation_surfaces(config_params['Sample name'])
         error_analyzer.save_parameter_correlation_results(config_params['Sample name'])
-
 
 if __name__ == '__main__':
     main()
