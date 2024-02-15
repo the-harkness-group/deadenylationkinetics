@@ -5,131 +5,199 @@
 # This is a one-time-use script to parse the raw data files and calculate FRET for the            #
 # deadenylation kinetics assay.                                                                   #
 #                                                                                                 #
-# It is designed to parse a .csv data file from a Synergy Neo2 plate reader from BioTek using the #
-# Gen5 software. When exporting results from the plate reader, export as CSV or TXT and name as:  #
-#                                                                                                 #
-#   CNOT[0-9][X]-##-##uM_###s_rep-#_....csv                                                       #
-#   CNOTVARIANT-CONC-CONCuM_TIMEDELAYs_rep-NUMREPLICATES_ANYTHING.csv                             #
-#                                                                                                 #
-# Arguments include (1) the time file and (2) data files for each enzyme concentration            #
-#                                                                                                 #
-# Run script as: python_raw_data.py TIMEFILE.csv DATAFILE(S).csv                                  #
+# Run script as: python parse_and_plot_raw_data.py parse_data.yaml                                #
 ###################################################################################################
 
-import sys
-import numpy as np
 import pandas as pd
-import re
+import sys
 import matplotlib.pyplot as plt
-from plotting import make_pdf
+import numpy as np
+import matplotlib.cm as cm
+import yaml
 
-data = pd.DataFrame()
-search_phrase = ['CNOT[0-9]+[A-Z]*-([0-9-un]*)M','_rep-([0-9]+)','_([0-9]+)s','RNA[0-9]+-([-0-9]+)nM']
-all_enz_conc = []
+config_params = yaml.safe_load(open(sys.argv[1],'r'))
 
-# Load in time arrays based on shaking delays
-time_arrays = pd.read_csv(sys.argv[1])
-num_files = len(sys.argv)-2
-channels = ['IDD','IDA','IAA']
-ex = ['485','485','550']
-em = ['528','590','590']
-# Parse the data files 
-for file_num in range(num_files):
-    fluor_data = {k:[] for k in channels}   
-    at_data = False
-    filename = sys.argv[file_num+2]
-    with open(filename, 'r') as f:
-        for i,line in enumerate(f):
-            if line.find("Results") != -1: # Determine if you are "at the start of the data"
-                at_data = True
-            if at_data == True: # Parse the data by ex/em wavelengths
-                for j,channel in enumerate(channels):
-                    if line[-10:].find(ex[j]) != -1 and line[-10:].find(em[j]) != -1:
-                        m = re.findall(r'([0-9]+)',line)
-                        fluor_data[channel].append([int(v) for v in m[:-2]])
-    fluor_data ={k:np.transpose(fluor_data[k]) for k in channels} # Transpose the data
+output_file_name = config_params['Output file name']
+data_to_load = config_params['Data to load']
+time_arrays = np.transpose(np.array(pd.read_csv(config_params['Time arrays'], header=0)))
 
-    # Calculate FRET
-    fluor_data['IAA_scaling'] = [0]*len(fluor_data['IDD'])
-    fluor_data['IDA_norm'] = [0]*len(fluor_data['IDD'])
-    fret = [0]*len(fluor_data['IDD'])
-    for i,v in enumerate(fluor_data['IDD']):
-        norm_value = fluor_data['IAA'][i][0]
-        fluor_data['IAA_scaling'][i] = [x/norm_value for x in fluor_data['IAA'][i]]
-        fluor_data['IDA_norm'][i] = [x/z for x,z in zip(fluor_data['IDA'][i],fluor_data['IAA_scaling'][i])]
-        fret[i] = [y/(x+y) for x,y in zip(v,fluor_data['IDA_norm'][i])] # FRET with normed IDA
-        # fret[i] = [y/(x+y) for x,y in zip(v,fluor_data['IDA'][i])] # FRET with raw IDA
+# Initialize an empty array to store FRET values
+fret_array = []
 
-    # Extract parameters from filename
-    parameters = {"enzyme_conc":[],"replicates":[],"time_delay":[],"rna_conc":[]} # Initialize dictionary
-    for i,v in enumerate(parameters.keys()): # Loop through dictionary keys
-        m = re.findall(search_phrase[i],filename) # Search for the parameter in the filename
-        parameters[v] = [int(k) for k in re.findall(r'([0-9]+)',m[0])] # Extract the parameter value
+# Load CSV file
 
-    # Full list of enzyme concentrations
-    all_enz_conc = np.concatenate((all_enz_conc,parameters['enzyme_conc']))
-   
-    # Create dataframe with all data
-    for i in range(len(parameters['enzyme_conc'])):
-        for u in range(len(parameters['rna_conc'])):
-            for j in range(parameters['replicates'][0]):
-                temp_data = pd.DataFrame()
-                temp_data['time'] = np.concatenate(([0],time_arrays[str(parameters['time_delay'][0])])) # Add time array based on delay with time = 0
-                temp_data['fret'] = np.concatenate(([0],fret[j+(i*parameters['replicates'][0])])) # Add FRET array
-                temp_data['error'] = [0 for k in range(len(fret[0])+1)] # Add replicate number for each value of FRET
-                temp_data['enzyme_conc'] = [parameters['enzyme_conc'][i]/1.0e6 for k in range(len(fret[0])+1)] # Add enzyme concentration for each value
-                temp_data['replicate'] = [j+1 for k in range(len(fret[0])+1)] # Add replicate number for each value of FRET
-                temp_data['rna_conc'] = [parameters['rna_conc'][u]/1.0e9 for k in range(len(fret[0])+1)] # Add RNA concentration for each value
-                for k in channels:
-                    temp_data[k] = np.concatenate(([0],fluor_data[k][j+(i*parameters['replicates'][0])])) # add fluorescence data
-                data = pd.concat([data,temp_data], ignore_index=True) # Add data to dataframe
+for i,file in enumerate(data_to_load):
+    dataload = np.array(pd.read_csv(data_to_load[file], header=None))
+    
+    # Save row 2 of data starting at column 3 as enzyme_conc
+    enzyme_conc = dataload[1][2:]
+    unique_enzyme_conc = np.unique(enzyme_conc)
 
-# Extract enzyme name from filename
-enzyme = re.findall('CNOT[0-9]+[A-Z]*',filename)[0]
+    # Save row 3 of data starting at column 3 as cap1_conc
+    cap1_conc = dataload[2][2:]
+    unique_cap1_conc = np.unique(cap1_conc)
 
-# Save data to csv
-export_conc = '-'.join(str(int(v)) for v in all_enz_conc)
-export_filename = f'{enzyme}_{export_conc}uM_data_for_fit'
-data.to_csv(f'{export_filename}.csv')
+    # Save row 4 of data starting at column 3 as rna_conc
+    rna_conc = dataload[3][2:]
+    unique_rna_conc = np.unique(rna_conc)
 
+    # Save row 5 of data starting at column 3 as dna_conc
+    dna_conc = dataload[4][2:]
+    unique_dna_conc = np.unique(dna_conc)
 
-# Plot FRET data
-pdf = make_pdf(f'{export_filename}.pdf')
-replicate_shapes = ['s','o','^']
-num_conc = len(all_enz_conc)
+    # Save first column of data as point from row 7 onwards
+    points = np.transpose(dataload)[0][6:]
 
-fret_fig = plt.subplots(num_conc, 1, figsize=(5,num_conc*2.5))
-for i in range(num_conc):
-    for j in range(parameters['replicates'][0]):
-        temp_data = data.loc[(data['enzyme_conc'] == all_enz_conc[i]/1e6) & (data['replicate'] == j+1)]
-        p = fret_fig[1][i].plot(temp_data['time'],temp_data['fret'],replicate_shapes[j],label=f'rep. {j+1}') 
-    fret_fig[1][i].set_ylabel('FRET')
-    fret_fig[1][i].set_ylim(0,1)
-    fret_fig[1][i].set_title(f'{all_enz_conc[i]} uM', loc = 'right')
-fret_fig[1][0].legend(loc='best')
-fret_fig[1][-1].set_xlabel('time (s)')
-fret_fig[0].suptitle(f'{enzyme}')
+    # Convert points to integers
+    points = points.astype(int)
+    unique_points = np.unique(points)
 
-# Plot raw fluorescence data
-fluor_fig = plt.subplots(num_conc, 3, figsize=(10,num_conc*2))
-for i in range(num_conc):
-    for j in range(parameters['replicates'][0]):
-        temp_data = data.loc[(data['enzyme_conc'] == all_enz_conc[i]/1e6) & (data['replicate'] == j+1)]
-        for k,v in enumerate(channels):
-            l=k
-            fluor_fig[1][i,k].plot(temp_data['time'],temp_data[v],replicate_shapes[j],label=f'rep. {j+1}')
-            if i == 0: fluor_fig[1][0,k].set_title(f"{channels[k]}$_{{{ex[k]},{em[k]}}}$", loc = 'center', y = 1.0)
+    # Save row 6 of data starting at column 3 as time array index
+    time_index = dataload[5][2:].astype(int)
 
-    fluor_fig[1][i,0].set_ylabel('Fluorescence (a.u.)')
-    fluor_fig[1][i,-1].set_title(f'{all_enz_conc[i]} uM', loc = 'right', y = 0.0)
-fluor_fig[1][-1,1].set_xlabel('Time (s)')
-fluor_fig[0].suptitle(f'{enzyme}')
+    # Save column 2 of data as channels from row 7 onwards
+    channels = np.transpose(dataload)[1][6:]
+    unique_channels = np.unique(channels)
 
-# Save figure to PDF
-fret_fig[0].tight_layout()
-fluor_fig[0].tight_layout()
-pdf.savefig(fret_fig[0])
-pdf.savefig(fluor_fig[0])
+    # Save data starting at row 7 and column 3 as data
+    data = np.transpose(dataload[6:,2:])
+ 
+    for dna in unique_dna_conc:
+        if dna == 0:
+            continue
+        else:
+            for rna in unique_rna_conc:
+                for cap1 in unique_cap1_conc:
+                    for enzyme in unique_enzyme_conc:
+                        temp_data = np.transpose(data[np.all([enzyme_conc == enzyme, cap1_conc == cap1, rna_conc == rna, dna_conc == dna],axis=0 ),:])
+                        temp_time_idx = time_index[np.all([enzyme_conc == enzyme, cap1_conc == cap1, rna_conc == rna, dna_conc == dna],axis=0 )]
+                        temp_time = time_arrays[temp_time_idx-1]
+                        if enzyme == 0:
+                            blank = np.mean(temp_data, axis=1)
+                            blank_IDD_start = blank[np.all([channels == 'DD',points == 1],axis=0)]
+                            blank_IDA_start = blank[np.all([channels == 'DA',points == 1],axis=0)]
+                        for i,point in enumerate(unique_points):
+                            IDD_idx = np.all([channels == 'DD',points == point],axis=0)
+                            IDA_idx = np.all([channels == 'DA',points == point],axis=0)
+                            temp_IDD = temp_data[IDD_idx, :][0]
+                            temp_IDA = temp_data[IDA_idx, :][0]
+                            temp_IDD_blank = blank[IDD_idx]
+                            temp_IDA_blank = blank[IDA_idx]
+                            norm_IDD = temp_IDD - abs(blank_IDD_start-temp_IDD_blank)
+                            norm_IDA = temp_IDA - abs(blank_IDA_start-temp_IDA_blank)
+                            FRET = norm_IDA/(norm_IDD+norm_IDA)
+                            enzyme = round(enzyme*1e6,2)/1e6
+                            for j,rep in enumerate(FRET):
+                                fret_array.append([temp_time[j][i],rep,0,enzyme,1,rna,dna])
 
-pdf.close()
-plt.close()
+# Save fret_array as CSV
+temp_df = pd.DataFrame(fret_array, columns=['Time', 'FRET', 'Error','Enzyme', 'Replicate','RNA', 'DNA'])
+df = temp_df.sort_values(['RNA', 'Enzyme','Time'], ascending=[True, True, True])
+df.to_csv(f'{output_file_name}.csv', index=False)
+
+protein = config_params['Sample name']
+
+rnas = df["RNA"].unique()
+enzymes = df['Enzyme'].unique()
+times = df["Time"].unique()
+
+mean_df = pd.DataFrame(columns=["Time", "mFRET", "Stdev", "RNA", "Enzyme"])
+
+# Specify the RNA, Enzyme, and Time values
+for rna in rnas:
+    for enzyme in enzymes:
+        for time in times:
+            # Filter the dataframe based on the specified values
+            filtered_df = df[(df["RNA"] == rna) & (df["Enzyme"] == enzyme) & (df["Time"] == time)]
+            if filtered_df.empty:
+                continue
+            else:
+                mean_fret = filtered_df["FRET"].mean()
+                stdev_fret = filtered_df["FRET"].std()
+                stdev_fret = stdev_fret if not np.isnan(stdev_fret) else 0
+                temp_df = pd.DataFrame({"Time": time, "mFRET": mean_fret, "Stdev": stdev_fret, "RNA": rna, "Enzyme": enzyme}, index=[0])
+                mean_df = pd.concat([mean_df, temp_df])
+
+points = len(enzymes)
+colormap = cm.inferno(np.linspace(1, 0, points+1))
+colormap = colormap[1:]
+
+ylim = [-0.05,1.05]
+yticks = np.linspace(0,1,6)
+
+len_rna = len(rnas)
+
+if len_rna == 1:
+    data_fig, ax = plt.subplots(1,1,figsize=(2+len_rna*5,5)) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
+    max_time = round(max(mean_df['Time']),-3)
+    if max_time <= 4000:
+        max_time = 4000
+    elif max_time <= 8000:
+        max_time = 8000
+    else:
+        max_time = max_time
+    max_time = 2400
+    xlim = [0-0.03*max_time, max_time+0.03*max_time]
+    xticks = np.linspace(0,max_time,6)
+    for j, enzyme in enumerate(enzymes):
+        
+            filtered_df = mean_df[(mean_df["RNA"] == rna) & (mean_df["Enzyme"] == enzyme)]
+                      
+            # color_idx = np.where(colorpoints == round(enzyme*1e5,2))
+            # idx_enzyme = round(enzyme*1e5,2)
+            # color_idx = np.where(colorpoints == idx_enzyme)[0]
+            color_idx = j
+            line_label = f"{enzyme*1e6:.1f}"
+
+            ax.errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc=colormap[color_idx],mec=colormap[color_idx],mew=1,capsize=0,capthick=1,
+                            ecolor=colormap[color_idx],label = line_label)
+            
+            ax.set_title(f"{protein} + {rna*1e9:.0f} nM RNA")
+            ax.xaxis.set_ticks(xticks)
+            ax.yaxis.set_ticks(yticks)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_xlabel("Time (s)")
+            ax.set_ylabel("mean FRET")
+            legend_title = f"[{protein}] (uM)"
+            legend = ax.legend(title=legend_title,frameon=False, loc='upper left', fontsize=8, bbox_to_anchor=(1.05, 1))
+
+else:
+    data_fig, axs = plt.subplots(len_rna,1,figsize=(7,len_rna*4)) # Access fig with data_fit_fig[0], axis with data_fit_fig[1]
+    for i, rna in enumerate(rnas):
+        temp_data = mean_df[(mean_df["RNA"] == rna)]
+        max_time = round(max(temp_data['Time']),-3)
+        if max_time <= 4000:
+            max_time = 4000
+        elif max_time <= 8000:
+            max_time = 8000
+        xlim = [0-0.03*max_time, max_time+0.03*max_time]
+        xticks = np.linspace(0,max_time,6)
+        for j, enzyme in enumerate(enzymes):
+            filtered_df = mean_df[(mean_df["RNA"] == rna) & (mean_df["Enzyme"] == enzyme)]
+            color_idx = j
+            line_label = f"{enzyme*1e6:.1f}"
+
+            # FRET data plots
+            # axs[i].errorbar(,,color=colormap[color_idx])
+            axs[i].errorbar(filtered_df["Time"],filtered_df["mFRET"],yerr=filtered_df["Stdev"],fmt='o',markersize=5,mfc=colormap[color_idx],mec=colormap[color_idx],mew=1,capsize=0,capthick=1,
+                            ecolor=colormap[color_idx],label = line_label)
+            
+            axs[i].set_title(f"{protein} + {rna*1e9:.0f} nM RNA")
+            axs[i].xaxis.set_ticks(xticks)
+            axs[i].yaxis.set_ticks(yticks)
+            axs[i].set_xlim(xlim)
+            axs[i].set_ylim(ylim)
+            axs[i].set_ylabel("mean FRET")
+            if i == len_rna-1:
+                axs[i].set_xlabel("Time (s)")
+            if i == 0:
+                legend_title = f"[{protein}] (uM)"
+                legend = axs[i].legend(title=legend_title,frameon=False, loc='upper left', fontsize=8, bbox_to_anchor=(1.05, 1))
+
+data_fig.tight_layout()
+
+if config_params['Save plot as']['PDF'] == True:
+    data_fig.savefig(f"{output_file_name}_plotted.pdf", format='pdf')
+if config_params['Save plot as']['PNG'] == True:   
+    data_fig.savefig(f"{output_file_name}_plotted.png", format='png', transparent=True, dpi=1200)
